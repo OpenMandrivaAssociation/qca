@@ -1,11 +1,12 @@
 %define qtdir   %{_prefix}/lib/qt3
 %define plugindir %{qtdir}/plugins/%_lib
 %define libname %mklibname %name 1
+%define develname %mklibname %name -d
 
 Name:	 	qca
 Version:	1.0
-Release:	%mkrel 11
-License:	LGPL
+Release:	%mkrel 12
+License:	LGPLv2.1
 Summary:	Straightforward and cross-platform crypto API for Qt
 Group:		Development/KDE and Qt
 URL:		http://delta.affinix.com/qca
@@ -15,13 +16,14 @@ URL:		http://delta.affinix.com/qca
 Source0:	%name-%version.tar.bz2
 Source1:	%name-tls-%version.tar.bz2
 Source2:	%name-sasl-%version.tar.bz2
+Patch0:		qca-1.0-configure-libdir.patch
+Patch1:		qca-1.0-lib64.patch
+Patch2:		qca-1.0-fix-gcc-4.0.patch
 Requires:	%libname = %version
 BuildRoot:	%_tmppath/%name-buildroot
 BuildRequires:	openssl-devel >= 0.9.7
 BuildRequires:	qt3-devel >= 3.3.5-7mdk
-Patch0: qca-1.0-configure-libdir.patch
-Patch1: qca-1.0-lib64.patch
-Patch2: qca-1.0-fix-gcc-4.0.patch
+
 
 %description
 Taking a hint from the similarly-named Java Cryptography Architecture, QCA aims
@@ -41,13 +43,15 @@ Requires:	%name
 %description	-n %libname
 Libraries for QCA
 
-%package	-n %libname-devel
+%package	-n %develname
 Summary:	Development files from QCA
 Group:		Development/KDE and Qt
-Provides:	lib%name-devel
+Provides:	lib%name-devel = %version-%release
+Provides:	%name-devel = %version-release
 Requires:	%libname = %version
+Obsoletes:	%mklibname qca 1 -d
 
-%description	-n %libname-devel
+%description	-n %develname
 Development files from QCA
 
 %package	-n %libname-tls
@@ -127,11 +131,11 @@ rm -rf %{buildroot}
 
 %files	-n %libname
 %defattr(0644,root,root,0755)
-%doc README COPYING INSTALL TODO
 %qtdir/%_lib/libqca.so.*
 
-%files	-n %libname-devel
+%files	-n %develname
 %defattr(0644,root,root,0755)
+%doc README TODO
 %qtdir/include/%{name}.h
 %qtdir/%_lib/libqca.so
 
