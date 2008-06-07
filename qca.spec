@@ -1,7 +1,6 @@
-%define qtdir   %{_prefix}/lib/qt3
-%define plugindir %{qtdir}/plugins/%_lib
+%define plugindir %{qt3lib}/qt3/plugins
 %define libname %mklibname %name 1
-%define develname %mklibname %name -d
+%define develname %mklibname %name 1 -d
 
 Name:	 	qca
 Version:	1.0
@@ -49,7 +48,8 @@ Group:		Development/KDE and Qt
 Provides:	lib%name-devel = %version-%release
 Provides:	%name-devel = %version-release
 Requires:	%libname = %version
-Obsoletes:	%mklibname qca 1 -d
+Obsoletes:	%mklibname qca 1 -d < %version-%release
+Obsoletes:	%mklibname qca -d < %version-%release
 
 %description	-n %develname
 Development files from QCA
@@ -86,23 +86,25 @@ utilize the Qt Cryptographic Architecture (QCA).
 %patch2 -p1 -b .fix_compile_gcc
 
 %build
-export QTDIR=%qtdir
+export QTDIR=%qt3dir
 
-export LD_LIBRARY_PATH=%{qtdir}/%_lib:$LD_LIBRARY_PATH
-export PATH=%{qtdir}/bin:$PATH
+export LD_LIBRARY_PATH=%{qt3lib}:$LD_LIBRARY_PATH
+export PATH=%{qt3dir}/bin:$PATH
 
 # main qca
 ./configure \
-	--prefix=%qtdir \
-	--libdir=%qtdir/%_lib \
-	--qtdir=%qtdir
+	--prefix=%_prefix \
+	--libdir=%qt3lib/qt3 \
+	--qtdir=%qt3dir
 
 %make
 
 # Plugins
 for plugin in tls sasl; do
    pushd %{name}-${plugin}-%{version}
-      ./configure --qtdir=%{qtdir}; %make
+	./configure \
+        	--qtdir=%qt3dir
+	%make
    popd
 done
 
@@ -113,11 +115,11 @@ make install INSTALL_ROOT=%{buildroot}
 # Plugins
 for plugin in tls sasl; do
    pushd %{name}-${plugin}-%{version}
-      %makeinstall INSTALL_ROOT=%{buildroot}
+      make install INSTALL_ROOT=%{buildroot}
    popd
 done
 mkdir -p %{buildroot}/%{plugindir}/crypto
-mv  %{buildroot}/%{qtdir}/plugins/crypto/* %{buildroot}/%{plugindir}/crypto
+#mv  %{buildroot}/%{qt3dir}/plugins/crypto/* %{buildroot}/%{plugindir}/crypto
 
 %clean
 rm -rf %{buildroot}
@@ -131,13 +133,13 @@ rm -rf %{buildroot}
 
 %files	-n %libname
 %defattr(0644,root,root,0755)
-%qtdir/%_lib/libqca.so.*
+%_libdir/libqca.so.1*
 
 %files	-n %develname
 %defattr(0644,root,root,0755)
 %doc README TODO
-%qtdir/include/%{name}.h
-%qtdir/%_lib/libqca.so
+%_includedir/%{name}.h
+%_libdir/libqca.so
 
 %files	-n %libname-tls
 %defattr(0644,root,root,0755)
@@ -148,6 +150,3 @@ rm -rf %{buildroot}
 %defattr(0644,root,root,0755)
 %doc %{name}-sasl-%{version}/{README,COPYING}
 %{plugindir}/crypto/libqca-sasl.so
-
-
-
