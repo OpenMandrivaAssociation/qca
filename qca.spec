@@ -19,8 +19,9 @@ Patch1: qca-1.0-lib64.patch
 Patch2: qca-1.0-fix-gcc-4.0.patch
 Requires: %libname = %version
 BuildRoot: %_tmppath/%name-buildroot
-BuildRequires:	openssl-devel >= 0.9.7
-BuildRequires:	qt3-devel >= 3.3.5-7mdk
+BuildRequires: openssl-devel >= 0.9.7
+BuildRequires: rpm-manbo-setup >= rpm-manbo-setup-2-9
+BuildRequires: qt3-devel >= 3.3.5-7mdk
 
 
 %description
