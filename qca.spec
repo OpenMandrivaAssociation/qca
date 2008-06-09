@@ -1,25 +1,24 @@
-%define plugindir %{qt3lib}/qt3/plugins
 %define libname %mklibname %name 1
 %define develname %mklibname %name 1 -d
 
-Name:	 	qca
-Version:	1.0
-Release:	%mkrel 14
-License:	LGPLv2.1
-Summary:	Straightforward and cross-platform crypto API for Qt
-Group:		Development/KDE and Qt
-URL:		http://delta.affinix.com/qca
+Name: qca
+Version: 1.0
+Release: %mkrel 15
+License: LGPLv2.1
+Summary: Straightforward and cross-platform crypto API for Qt
+Group: Development/KDE and Qt
+URL: http://delta.affinix.com/qca
 ########################################################################################
 #it is now part of kde : You can find it here:  http://webcvs.kde.org//kdesupport/qca/ #
 #######################################################################################
-Source0:	%name-%version.tar.bz2
-Source1:	%name-tls-%version.tar.bz2
-Source2:	%name-sasl-%version.tar.bz2
-Patch0:		qca-1.0-configure-libdir.patch
-Patch1:		qca-1.0-lib64.patch
-Patch2:		qca-1.0-fix-gcc-4.0.patch
-Requires:	%libname = %version
-BuildRoot:	%_tmppath/%name-buildroot
+Source0: %name-%version.tar.bz2
+Source1: %name-tls-%version.tar.bz2
+Source2: %name-sasl-%version.tar.bz2
+Patch0: qca-1.0-configure-libdir.patch
+Patch1: qca-1.0-lib64.patch
+Patch2: qca-1.0-fix-gcc-4.0.patch
+Requires: %libname = %version
+BuildRoot: %_tmppath/%name-buildroot
 BuildRequires:	openssl-devel >= 0.9.7
 BuildRequires:	qt3-devel >= 3.3.5-7mdk
 
@@ -93,18 +92,14 @@ export LD_LIBRARY_PATH=%{qt3lib}:$LD_LIBRARY_PATH
 export PATH=%{qt3dir}/bin:$PATH
 
 # main qca
-./configure \
-	--prefix=%_prefix \
-	--libdir=%qt3lib/qt3 \
-	--qtdir=%qt3dir
+./configure --prefix=%_prefix --libdir=%qt3lib --qtdir=%qt3dir
 
 %make
 
 # Plugins
 for plugin in tls sasl; do
    pushd %{name}-${plugin}-%{version}
-	./configure \
-        	--qtdir=%qt3dir
+	./configure --qtdir=%qt3dir
 	%make
    popd
 done
@@ -119,8 +114,7 @@ for plugin in tls sasl; do
       make install INSTALL_ROOT=%{buildroot}
    popd
 done
-mkdir -p %{buildroot}/%{plugindir}/crypto
-#mv  %{buildroot}/%{qt3dir}/plugins/crypto/* %{buildroot}/%{plugindir}/crypto
+mkdir -p %{buildroot}/%{%qt3plugins}/crypto
 
 %clean
 rm -rf %{buildroot}
@@ -130,7 +124,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(0644,root,root,0755)
-%dir %{plugindir}/crypto
+%dir %qt3plugins/crypto
 
 %files	-n %libname
 %defattr(0644,root,root,0755)
@@ -145,9 +139,9 @@ rm -rf %{buildroot}
 %files	-n %libname-tls
 %defattr(0644,root,root,0755)
 %doc %{name}-tls-%{version}/{README,COPYING}
-%{plugindir}/crypto/libqca-tls.so
+%qt3plugins/crypto/libqca-tls.so
 
 %files	-n %libname-sasl
 %defattr(0644,root,root,0755)
 %doc %{name}-sasl-%{version}/{README,COPYING}
-%{plugindir}/crypto/libqca-sasl.so
+%qt3plugins/crypto/libqca-sasl.so
