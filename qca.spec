@@ -12,7 +12,7 @@
 
 Name: qca
 Version: 2.0.1
-Release: %mkrel 3
+Release: %mkrel 4
 License: LGPLv2+
 Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
