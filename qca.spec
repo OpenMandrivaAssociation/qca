@@ -4,22 +4,27 @@
 %define build_sys_rootcerts 1
 %{?_without_sys_rootcerts: %{expand: %%global build_sys_rootcerts 0}}
 
-%define name_orig	qca
 %define qtcryptodir	%{qt4plugins}/crypto
 %define lib_major	2
-%define lib_name	%mklibname %{name_orig} %{lib_major}
+%define lib_name	%mklibname %{name} %{lib_major}
+%define develname	%mklibname %{name} -d
 %define source_ver	%{version}
 
-Name: qca2
+Name: qca
 Version: 2.0.1
 Release: %mkrel 3
-License: LGPL
+License: LGPLv2+
 Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
 URL: http://delta.affinix.com/qca
 # Warning: Code coming from kdesupport to match kde development
-Source0: http://delta.affinix.com/download/qca/%{version}/beta7/%{name_orig}-%{source_ver}.tar.bz2
+Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
 Patch0: qca-2.0.1-mandir.patch
+# From upstream SVN: drop use of whirlpool, no longer available in
+# openssl - AdamW 2008/12
+Patch1: qca-2.0.1-whirlpool.patch
+# Fix underlinking in the openssl plugin - AdamW 2008/12
+Patch2: qca-2.0.1-underlink.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: qt4-devel >= 2:4.2
 %if %{build_sys_rootcerts}
@@ -29,6 +34,8 @@ BuildRequires: cmake
 BuildRequires: libgcrypt-devel
 BuildRequires: libsasl-devel
 BuildRequires: nss-devel
+Obsoletes: qca2 < 2.0.1-3
+Provides: qca2 = %{version}-%{release}
 Requires: qt4-common >= 4.3
 
 %description
@@ -102,17 +109,19 @@ Libraries for QCA.
 
 #------------------------------------------------------------------------------
 
-%package	-n %{lib_name}-devel
+%package	-n %{develname}
 Summary:	Development files for QCA
 Group:		Development/KDE and Qt
 Requires:	%{lib_name} = %{version}-%{release}
 Provides:	%{name}-devel = %{version}-%{release}
-Conflicts:	%{mklibname -d qca 1} >= 1.0-13
+Provides:	%{name}2-devel = %{version}-%{release}
+Obsoletes:	%{mklibname -d qca 1} < 1.0-17
+Obsoletes:	%{mklibname -d qca 2} < 2.0.1-3
 
-%description	-n %{lib_name}-devel
+%description	-n %{develname}
 Development files for QCA.
 
-%files	-n %{lib_name}-devel
+%files	-n %{develname}
 %defattr(0644,root,root,0755)
 %{_libdir}/pkgconfig/qca2.pc
 %{qt4dir}/mkspecs/features/crypto.prf
@@ -147,6 +156,7 @@ Provides: qca2-openssl = %version
 Provides: qca2-tls = %version
 Provides: qca2-plugin-openssl-%{_lib} = %{version}-%{release}
 Obsoletes: qca2-plugin-openssl-%{_lib} < 2.0.0-5
+Obsoletes: %{mklibname qca 1}-tls < 1.0-17
 
 %description -n %{lib_name}-plugin-openssl
 This is a plugin to provide OpenSSL capability to programs that
@@ -184,6 +194,7 @@ BuildRequires: libsasl2-devel
 Provides: qca2-sasl = %version
 Provides: qca2-plugin-cyrus-sasl-%{_lib} = %{version}-%{release}
 Obsoletes: qca2-plugin-cyrus-sasl-%{_lib} < 2.0.0-5
+Obsoletes: %{mklibname qca 1}-sasl < 1.0-17
 
 %description -n %{lib_name}-plugin-cyrus-sasl
 This is a plugin to provide cyrus-sasl capability to programs that
@@ -264,8 +275,10 @@ utilize the Qt Cryptographic Architecture (QCA).
 #------------------------------------------------------------------------------
 
 %prep
-%setup -q -n %{name_orig}-%{source_ver}
+%setup -q -n %{name}-%{source_ver}
 %patch0 -p1 -b .mandir
+%patch1 -p1 -b .whirlpool
+%patch2 -p1 -b .underlink
 
 %build
 %cmake_qt4 \
