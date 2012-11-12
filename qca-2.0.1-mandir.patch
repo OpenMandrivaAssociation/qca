@@ -1,0 +1,11 @@
+--- qca-2.0.1/CMakeLists.txt.orig	2008-06-02 16:33:46.000000000 -0300
++++ qca-2.0.1/CMakeLists.txt	2008-06-02 16:34:40.000000000 -0300
+@@ -131,7 +131,7 @@
+ CONFIGURE_FILE("crypto.prf.cmake" "${CMAKE_BINARY_DIR}/crypto.prf" @ONLY)
+ INSTALL(FILES "${CMAKE_BINARY_DIR}/crypto.prf" DESTINATION ${CMAKE_INSTALL_PREFIX}/mkspecs/features)
+ 
+-install(FILES man/qcatool2.1 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1)
++install(FILES man/qcatool2.1 DESTINATION /usr/share/man/man1)
+ 
+ add_subdirectory(src)
+ add_subdirectory(tools)
