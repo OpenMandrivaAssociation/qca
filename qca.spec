@@ -10,30 +10,34 @@
 %define develname	%mklibname %{name} -d
 %define source_ver	%{version}
 
+%define svn 1311233
+
 Name: qca
-Version: 2.0.1
-Release: %mkrel 4
+Version: 2.0.4
+%if 0%svn
+Release: 0.%svn.1
+# From svn export svn+ssh://bero@svn.kde.org/home/kde/kdesupport/qca
+Source0: qca-%svn.tar.xz
+%else
+Release: 1
+# Warning: Code coming from kdesupport to match kde development
+Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
+%endif
 License: LGPLv2+
 Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
 URL: http://delta.affinix.com/qca
-# Warning: Code coming from kdesupport to match kde development
-Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
 Patch0: qca-2.0.1-mandir.patch
-# From upstream SVN: drop use of whirlpool, no longer available in
-# openssl - AdamW 2008/12
-Patch1: qca-2.0.1-whirlpool.patch
 # Fix underlinking in the openssl plugin - AdamW 2008/12
 Patch2: qca-2.0.1-underlink.patch
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: qt4-devel >= 2:4.2
 %if %{build_sys_rootcerts}
 BuildRequires: rootcerts
 %endif
 BuildRequires: cmake
-BuildRequires: libgcrypt-devel
+BuildRequires: pkgconfig(libgcrypt)
 BuildRequires: libsasl-devel
-BuildRequires: nss-devel
+BuildRequires: pkgconfig(nss)
 Obsoletes: qca2 < 2.0.1-3
 Provides: qca2 = %{version}-%{release}
 Requires: qt4-common >= 4.3
@@ -275,10 +279,13 @@ utilize the Qt Cryptographic Architecture (QCA).
 #------------------------------------------------------------------------------
 
 %prep
+%if 0%svn
+%setup -q -n %name
+%else
 %setup -q -n %{name}-%{source_ver}
-%patch0 -p1 -b .mandir
-%patch1 -p1 -b .whirlpool
-%patch2 -p1 -b .underlink
+%endif
+%patch0 -p1 -b .mandir~
+%patch2 -p1 -b .underlink~
 
 %build
 %cmake_qt4 \

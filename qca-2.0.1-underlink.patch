@@ -1,12 +1,14 @@
---- qca-2.0.1/plugins/qca-ossl/CMakeLists.txt	2008-04-03 10:11:08.000000000 -0700
-+++ qca-2.0.1/plugins/qca-ossl/CMakeLists.txt.new	2008-12-15 23:29:51.000000000 -0800
-@@ -9,9 +9,7 @@
+--- qca/plugins/qca-ossl/CMakeLists.txt.underlink	2010-04-18 03:57:31.000000000 +0200
++++ qca/plugins/qca-ossl/CMakeLists.txt	2012-12-27 15:57:19.953829773 +0100
+@@ -16,10 +16,7 @@ INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DI
  TARGET_LINK_LIBRARIES(qca-ossl ${QT_QTCORE_LIBRARY})
  TARGET_LINK_LIBRARIES(qca-ossl qca)
  TARGET_LINK_LIBRARIES(qca-ossl ${OPENSSL_LIBRARIES})
--if(APPLE)
- TARGET_LINK_LIBRARIES(qca-ossl crypto)
--endif(APPLE)
+-
+-IF (APPLE)
+-  TARGET_LINK_LIBRARIES(qca-ossl crypto)
+-ENDIF (APPLE)
++TARGET_LINK_LIBRARIES(qca-ossl crypto)
+ 
  IF (WIN32)
    ADD_DEFINITIONS(-DOSSL_097)
-   TARGET_LINK_LIBRARIES(qca-ossl gdi32)
