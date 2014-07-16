@@ -10,33 +10,38 @@
 %define develname	%mklibname %{name} -d
 %define source_ver	%{version}
 
-%define svn 1311233
+# Override to make sure Qt4 and Qt5 versions don't end up in the
+# same directory
+%define qt4lib %{_libdir}/qt4
+
+%define git 20140616
 
 Name: qca
-Version: 2.0.4
-%if 0%svn
-Release: 0.%svn.1
-# From svn export svn+ssh://bero@svn.kde.org/home/kde/kdesupport/qca
-Source0: qca-%svn.tar.xz
+Version: 2.1.0
+%if 0%git
+Release: 0.%git.1
+# From git export git://anongit.kde.org/qca.git
+Source0: qca-%git.tar.xz
 %else
 Release: 1
 # Warning: Code coming from kdesupport to match kde development
 Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
 %endif
+Source100: %{name}.rpmlintrc
 License: LGPLv2+
 Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
 URL: http://delta.affinix.com/qca
-Patch0: qca-2.0.1-mandir.patch
 # Fix underlinking in the openssl plugin - AdamW 2008/12
 Patch2: qca-2.0.1-underlink.patch
 BuildRequires: qt4-devel >= 2:4.2
+BuildRequires: qt5-devel
 %if %{build_sys_rootcerts}
 BuildRequires: rootcerts
 %endif
 BuildRequires: cmake
 BuildRequires: pkgconfig(libgcrypt)
-BuildRequires: libsasl-devel
+BuildRequires: sasl-devel
 BuildRequires: pkgconfig(nss)
 Obsoletes: qca2 < 2.0.1-3
 Provides: qca2 = %{version}-%{release}
@@ -58,8 +63,21 @@ regulation.
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
 %defattr(0755,root,root,0755)
-%{qt4dir}/bin/qcatool2
+%{_bindir}/mozcerts
+%{_bindir}/qcatool
 %_mandir/man1/*
+
+#------------------------------------------------------------------------------
+%package tools-qt4
+Summary:	QCA tools for Qt 4.x
+Group:		System/Libraries
+
+%description tools-qt4
+QCA tools for Qt 4.x
+
+%files tools-qt4
+%{qt4dir}/bin/mozcerts
+%{qt4dir}/bin/qcatool
 
 #------------------------------------------------------------------------------
 
@@ -107,9 +125,63 @@ Libraries for QCA.
 %files -n %{lib_name}
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
+%dir %{_libdir}/qca
+%dir %{_libdir}/qca/crypto
+%defattr(0755,root,root,0755)
+%{_libdir}/libqca.so.*
+
+#------------------------------------------------------------------------------
+
+%package	-n %{lib_name}-qt4
+Summary:	Libraries for QCA
+Group:		System/Libraries
+%if %{build_sys_rootcerts}
+Requires:	rootcerts
+Obsoletes:	%{name}-root-certificates
+%else
+Requires:	%{name}-root-certificates >= %{version}
+%endif
+Obsoletes:	%{lib_name}-static-devel 
+
+%description	-n %{lib_name}-qt4
+Libraries for QCA.
+
+%if %mdkversion < 200900
+%post -n %{lib_name} -p /sbin/ldconfig
+%endif
+%if %mdkversion < 200900
+%postun -n %{lib_name} -p /sbin/ldconfig
+%endif
+
+%files -n %{lib_name}-qt4
+%defattr(0644,root,root,0755)
+%doc README COPYING INSTALL TODO
 %dir %{qtcryptodir}
 %defattr(0755,root,root,0755)
 %{qt4lib}/libqca.so.*
+
+
+#------------------------------------------------------------------------------
+
+%package	-n %{develname}-qt4
+Summary:	Development files for QCA
+Group:		Development/KDE and Qt
+Requires:	%{lib_name} = %{version}-%{release}
+Provides:	%{name}-devel = %{version}-%{release}
+Provides:	%{name}2-devel = %{version}-%{release}
+Obsoletes:	%{mklibname -d qca 1} < 1.0-17
+Obsoletes:	%{mklibname -d qca 2} < 2.0.1-3
+
+%description	-n %{develname}-qt4
+Development files for QCA.
+
+%files	-n %{develname}-qt4
+%defattr(0644,root,root,0755)
+%{qt4lib}/pkgconfig/qca2.pc
+%{qt4dir}/mkspecs/features/crypto.prf
+%dir %{qt4include}/QtCrypto
+%{qt4include}/QtCrypto/*
+%{qt4lib}/libqca.so
 
 #------------------------------------------------------------------------------
 
@@ -128,25 +200,39 @@ Development files for QCA.
 %files	-n %{develname}
 %defattr(0644,root,root,0755)
 %{_libdir}/pkgconfig/qca2.pc
-%{qt4dir}/mkspecs/features/crypto.prf
-%dir %{qt4include}/QtCrypto
-%{qt4include}/QtCrypto/*
-%{qt4lib}/libqca.so
+%{_prefix}/mkspecs/features/crypto.prf
+%{_includedir}/QtCrypto
+%{_libdir}/libqca.so
 
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-plugin-gnupg
 Summary: GnuPG plugin for QCA
 Group: Development/KDE and Qt
-Provides: qca2-gnupg = %version
-Provides: qca2-plugin-gnupg-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-gnupg-%{_lib} < 2.0.0-5
+Provides: qca-plugin-gnupg-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-gnupg
 This is a plugin to provide GnuPG capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-gnupg
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gnupg.*
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-gnupg
+Summary: GnuPG plugin for QCA
+Group: Development/KDE and Qt
+Provides: qca2-gnupg = %version
+Provides: qca2-plugin-gnupg-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-gnupg-%{_lib} < 2.0.0-5
+
+%description -n %{lib_name}-qt4-plugin-gnupg
+This is a plugin to provide GnuPG capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-gnupg
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-gnupg.*
 
@@ -156,17 +242,34 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: OpenSSL plugin for QCA
 Group: Development/KDE and Qt
 BuildRequires: openssl-devel
-Provides: qca2-openssl = %version
-Provides: qca2-tls = %version
-Provides: qca2-plugin-openssl-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-openssl-%{_lib} < 2.0.0-5
-Obsoletes: %{mklibname qca 1}-tls < 1.0-17
+Provides: qca-plugin-openssl-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-openssl
 This is a plugin to provide OpenSSL capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-openssl
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-ossl.*
+
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-openssl
+Summary: OpenSSL plugin for QCA
+Group: Development/KDE and Qt
+BuildRequires: openssl-devel
+Provides: qca2-openssl = %version
+Provides: qca2-tls = %version
+Provides: qca2-plugin-openssl-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-openssl-%{_lib} < 2.0.0-5
+Obsoletes: %{mklibname qca 1}-tls < 1.0-17
+
+%description -n %{lib_name}-qt4-plugin-openssl
+This is a plugin to provide OpenSSL capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-openssl
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-ossl.*
 
@@ -177,15 +280,32 @@ Summary: PKCS11 plugin for QCA
 Group: Development/KDE and Qt
 BuildRequires: openssl-devel
 BuildRequires: pkcs11-helper-devel
-Provides: qca2-pkcs11 = %version
-Provides: qca2-plugin-pkcs11-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-pkcs11-%{_lib} < 2.0.0-5
+Provides: qca-plugin-pkcs11-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-pkcs11
 This is a plugin to provide PKCS11 capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-pkcs11
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-pkcs11.*
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-pkcs11
+Summary: PKCS11 plugin for QCA
+Group: Development/KDE and Qt
+BuildRequires: openssl-devel
+BuildRequires: pkcs11-helper-devel
+Provides: qca2-pkcs11 = %version
+Provides: qca2-plugin-pkcs11-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-pkcs11-%{_lib} < 2.0.0-5
+
+%description -n %{lib_name}-qt4-plugin-pkcs11
+This is a plugin to provide PKCS11 capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-pkcs11
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-pkcs11.*
 
@@ -194,17 +314,33 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-cyrus-sasl
 Summary: Cyrus-sasl plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: libsasl2-devel
-Provides: qca2-sasl = %version
-Provides: qca2-plugin-cyrus-sasl-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-cyrus-sasl-%{_lib} < 2.0.0-5
-Obsoletes: %{mklibname qca 1}-sasl < 1.0-17
+BuildRequires: sasl-devel
+Provides: qca-plugin-cyrus-sasl-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-cyrus-sasl
 This is a plugin to provide cyrus-sasl capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-cyrus-sasl
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-cyrus-sasl.*
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-cyrus-sasl
+Summary: Cyrus-sasl plugin for QCA
+Group: Development/KDE and Qt
+BuildRequires: sasl-devel
+Provides: qca2-sasl = %version
+Provides: qca2-plugin-cyrus-sasl-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-cyrus-sasl-%{_lib} < 2.0.0-5
+Obsoletes: %{mklibname qca 1}-sasl < 1.0-17
+
+%description -n %{lib_name}-qt4-plugin-cyrus-sasl
+This is a plugin to provide cyrus-sasl capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-cyrus-sasl
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-cyrus-sasl.*
 
@@ -213,15 +349,30 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-logger
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
-Provides: qca2-logger = %version
-Provides: qca2-plugin-logger-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-logger-%{_lib} < 2.0.0-5
+Provides: qca-plugin-logger-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-logger
 This is a plugin to provide logger capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-logger
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-logger.*
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-logger
+Summary: Logger plugin for QCA
+Group: Development/KDE and Qt
+Provides: qca2-logger = %version
+Provides: qca2-plugin-logger-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-logger-%{_lib} < 2.0.0-5
+
+%description -n %{lib_name}-qt4-plugin-logger
+This is a plugin to provide logger capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-logger
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-logger.*
 
@@ -230,15 +381,30 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-gcrypt
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
-Provides: qca2-gcrypt = %version
-Provides: qca2-plugin-gcrypt-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-gcrypt-%{_lib} < 2.0.0-5
+Provides: qca-plugin-gcrypt-%{_lib} = %{version}-%{release}
 
 %description -n %{lib_name}-plugin-gcrypt
 This is a plugin to provide gcrypt capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-gcrypt
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gcrypt.*
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-gcrypt
+Summary: Logger plugin for QCA
+Group: Development/KDE and Qt
+Provides: qca2-gcrypt = %version
+Provides: qca2-plugin-gcrypt-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-gcrypt-%{_lib} < 2.0.0-5
+
+%description -n %{lib_name}-qt4-plugin-gcrypt
+This is a plugin to provide gcrypt capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-gcrypt
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-gcrypt.*
 
@@ -247,15 +413,30 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-nss
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
-Provides: qca2-nss = %version
-Provides: qca2-plugin-nss-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-nss-%{_lib} < 2.0.0-5
+Provides: qca-plugin-nss-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-nss
 This is a plugin to provide nss capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-nss
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-nss.*
+
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-nss
+Summary: Logger plugin for QCA
+Group: Development/KDE and Qt
+Provides: qca2-nss = %version
+Provides: qca2-plugin-nss-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-nss-%{_lib} < 2.0.0-5
+
+%description -n %{lib_name}-qt4-plugin-nss
+This is a plugin to provide nss capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-nss
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-nss.*
 
@@ -264,9 +445,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-softstore
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
-Provides: qca2-softstore = %version
-Provides: qca2-plugin-softstore-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-softstore-%{_lib} < 2.0.0-5
+Provides: qca-plugin-softstore-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-softstore
 This is a plugin to provide softstore capability to programs that
@@ -274,39 +453,62 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-softstore
 %defattr(0644,root,root,0755)
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-softstore.*
+#------------------------------------------------------------------------------
+
+%package -n %{lib_name}-qt4-plugin-softstore
+Summary: Logger plugin for QCA
+Group: Development/KDE and Qt
+Provides: qca2-softstore = %version
+Provides: qca2-plugin-softstore-%{_lib} = %{version}-%{release}
+Obsoletes: qca2-plugin-softstore-%{_lib} < 2.0.0-5
+
+%description -n %{lib_name}-qt4-plugin-softstore
+This is a plugin to provide softstore capability to programs that
+utilize the Qt Cryptographic Architecture (QCA).
+
+%files -n %{lib_name}-qt4-plugin-softstore
+%defattr(0644,root,root,0755)
 %attr(0755,root,root) %{qt4plugins}/crypto/libqca-softstore.*
 
 #------------------------------------------------------------------------------
 
 %prep
-%if 0%svn
+%if 0%git
 %setup -q -n %name
 %else
 %setup -q -n %{name}-%{source_ver}
 %endif
-%patch0 -p1 -b .mandir~
 %patch2 -p1 -b .underlink~
 
 %build
 %cmake_qt4 \
+	-DQT4_BUILD:BOOL=ON \
 	-DCMAKE_INSTALL_PREFIX=%{qt4dir} \
-	-DLIB_INSTALL_DIR=%_libdir \
-	-DPKGCONFIG_INSTALL_PREFIX=%_libdir/pkgconfig
-
+	-DLIB_INSTALL_DIR=%{qt4lib} \
+	-DPKGCONFIG_INSTALL_PREFIX=%{qt4lib}/pkgconfig \
+	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
+	-DQCA_PLUGINS_INSTALL_DIR=%{qtcryptodir}
 %make
 
+cd ..
+mkdir build-qt5
+cd build-qt5
+cmake .. \
+	-DQT4_BUILD:BOOL=OFF \
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
+	-DLIB_INSTALL_DIR=%{_libdir} \
+	-DPKGCONFIG_INSTALL_PREFIX=%_libdir/pkgconfig \
+	-DQCA_MAN_INSTALL_DIR=%{_mandir}
+%make
 
 %install
 rm -rf %{buildroot}
 cd build
-
 make DESTDIR=%buildroot install
 
 # Make directory for plugins
 install -d -m 755 %{buildroot}/%{qtcryptodir}
 
-%clean
-rm -rf %buildroot
-
-
-
+cd ../build-qt5
+make DESTDIR=%buildroot install

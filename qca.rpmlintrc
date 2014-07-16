@@ -1,0 +1,2 @@
+# -devel-qt4 isn't recognized as a -devel package
+addFilter("E: devel-file-in-non-devel-package")
