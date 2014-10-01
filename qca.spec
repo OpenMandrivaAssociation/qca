@@ -19,11 +19,11 @@
 Name: qca
 Version: 2.1.0
 %if 0%git
-Release: 0.%git.1
+Release: 0.%git.2
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
-Release: 1
+Release: 2
 # Warning: Code coming from kdesupport to match kde development
 Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
 %endif
@@ -166,9 +166,11 @@ Libraries for QCA.
 %package	-n %{develname}-qt4
 Summary:	Development files for QCA
 Group:		Development/KDE and Qt
-Requires:	%{lib_name} = %{version}-%{release}
+Requires:	%{lib_name}-qt4 = %{version}-%{release}
 Provides:	%{name}-devel = %{version}-%{release}
+Provides:	%{name}-devel-qt4 = %{version}-%{release}
 Provides:	%{name}2-devel = %{version}-%{release}
+Provides:       %{name}2-devel-qt4 = %{version}-%{release}
 Obsoletes:	%{mklibname -d qca 1} < 1.0-17
 Obsoletes:	%{mklibname -d qca 2} < 2.0.1-3
 
