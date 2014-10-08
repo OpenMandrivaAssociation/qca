@@ -19,11 +19,11 @@
 Name: qca
 Version: 2.1.0
 %if 0%git
-Release: 0.%git.2
+Release: 0.%git.3
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
-Release: 2
+Release: 3
 # Warning: Code coming from kdesupport to match kde development
 Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
 %endif
@@ -264,7 +264,7 @@ BuildRequires: openssl-devel
 Provides: qca2-openssl = %version
 Provides: qca2-tls = %version
 Provides: qca2-plugin-openssl-%{_lib} = %{version}-%{release}
-Obsoletes: qca2-plugin-openssl-%{_lib} < 2.0.0-5
+Obsoletes: qca2-plugin-openssl < 2.1.0
 Obsoletes: %{mklibname qca 1}-tls < 1.0-17
 
 %description -n %{lib_name}-qt4-plugin-openssl
