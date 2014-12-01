@@ -15,6 +15,7 @@
 %define qt4lib %{_libdir}/qt4
 
 %define git 20140616
+%bcond_with qt5
 
 Name: qca
 Version: 2.1.0
@@ -35,7 +36,9 @@ URL: http://delta.affinix.com/qca
 # Fix underlinking in the openssl plugin - AdamW 2008/12
 Patch2: qca-2.0.1-underlink.patch
 BuildRequires: qt4-devel >= 2:4.2
+%if %{with qt5}
 BuildRequires: qt5-devel
+%endif
 %if %{build_sys_rootcerts}
 BuildRequires: rootcerts
 %endif
@@ -63,8 +66,10 @@ regulation.
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
 %defattr(0755,root,root,0755)
+%if %{with qt5}
 %{_bindir}/mozcerts
 %{_bindir}/qcatool
+%endif
 %_mandir/man1/*
 
 #------------------------------------------------------------------------------
@@ -115,20 +120,15 @@ Obsoletes:	%{lib_name}-static-devel
 %description	-n %{lib_name}
 Libraries for QCA.
 
-%if %mdkversion < 200900
-%post -n %{lib_name} -p /sbin/ldconfig
-%endif
-%if %mdkversion < 200900
-%postun -n %{lib_name} -p /sbin/ldconfig
-%endif
-
 %files -n %{lib_name}
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
+%if %{with qt5}
 %dir %{_libdir}/qca
 %dir %{_libdir}/qca/crypto
 %defattr(0755,root,root,0755)
 %{_libdir}/libqca.so.*
+%endif
 
 #------------------------------------------------------------------------------
 
@@ -145,13 +145,6 @@ Obsoletes:	%{lib_name}-static-devel
 
 %description	-n %{lib_name}-qt4
 Libraries for QCA.
-
-%if %mdkversion < 200900
-%post -n %{lib_name} -p /sbin/ldconfig
-%endif
-%if %mdkversion < 200900
-%postun -n %{lib_name} -p /sbin/ldconfig
-%endif
 
 %files -n %{lib_name}-qt4
 %defattr(0644,root,root,0755)
@@ -187,6 +180,7 @@ Development files for QCA.
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package	-n %{develname}
 Summary:	Development files for QCA
 Group:		Development/KDE and Qt
@@ -205,9 +199,10 @@ Development files for QCA.
 %{_prefix}/mkspecs/features/crypto.prf
 %{_includedir}/QtCrypto
 %{_libdir}/libqca.so
-
+%endif
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-gnupg
 Summary: GnuPG plugin for QCA
 Group: Development/KDE and Qt
@@ -220,7 +215,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-gnupg
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gnupg.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-gnupg
@@ -240,6 +235,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-openssl
 Summary: OpenSSL plugin for QCA
 Group: Development/KDE and Qt
@@ -253,7 +249,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-openssl
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-ossl.*
-
+%endif
 
 #------------------------------------------------------------------------------
 
@@ -277,6 +273,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-pkcs11
 Summary: PKCS11 plugin for QCA
 Group: Development/KDE and Qt
@@ -291,7 +288,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-pkcs11
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-pkcs11.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-pkcs11
@@ -313,6 +310,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-cyrus-sasl
 Summary: Cyrus-sasl plugin for QCA
 Group: Development/KDE and Qt
@@ -326,7 +324,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-cyrus-sasl
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-cyrus-sasl.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-cyrus-sasl
@@ -348,6 +346,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-logger
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
@@ -360,7 +359,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-logger
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-logger.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-logger
@@ -380,6 +379,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-gcrypt
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
@@ -392,7 +392,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-gcrypt
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gcrypt.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-gcrypt
@@ -412,6 +412,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-nss
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
@@ -424,7 +425,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-nss
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-nss.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-nss
@@ -444,6 +445,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-softstore
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
@@ -456,6 +458,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-softstore
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-softstore.*
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-softstore
@@ -475,6 +478,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with qt5}
 %package -n %{lib_name}-plugin-botan
 Summary:        Botan plugin for QCA
 Group:          Development/KDE and Qt
@@ -486,7 +490,7 @@ use the Botan cryptography library as its backend.
 
 %files -n %{lib_name}-plugin-botan
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-botan.*
-
+%endif
 #------------------------------------------------------------------------------
 
 %package -n %{lib_name}-qt4-plugin-botan
@@ -521,6 +525,7 @@ use the Botan cryptography library as its backend.
 	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10
 %make
 
+%if %{with qt5}
 cd ..
 mkdir build-qt5
 cd build-qt5
@@ -532,14 +537,16 @@ cmake .. \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
 	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10
 %make
+%endif
 
 %install
-rm -rf %{buildroot}
 cd build
 make DESTDIR=%buildroot install
 
 # Make directory for plugins
 install -d -m 755 %{buildroot}/%{qtcryptodir}
 
+%if %{with qt5}
 cd ../build-qt5
 make DESTDIR=%buildroot install
+%endif
