@@ -20,7 +20,7 @@
 Name: qca
 Version: 2.1.0
 %if 0%git
-Release: 0.%git.3
+Release: 0.%git.4
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
@@ -172,7 +172,11 @@ Development files for QCA.
 
 %files	-n %{develname}-qt4
 %defattr(0644,root,root,0755)
+%if %{with qt5}
 %{qt4lib}/pkgconfig/qca2.pc
+%else
+%{_libdir}/pkgconfig/qca2.pc
+%endif
 %{qt4dir}/mkspecs/features/crypto.prf
 %dir %{qt4include}/QtCrypto
 %{qt4include}/QtCrypto/*
@@ -519,7 +523,11 @@ use the Botan cryptography library as its backend.
 	-DQT4_BUILD:BOOL=ON \
 	-DCMAKE_INSTALL_PREFIX=%{qt4dir} \
 	-DLIB_INSTALL_DIR=%{qt4lib} \
+%if %{with qt5}
 	-DPKGCONFIG_INSTALL_PREFIX=%{qt4lib}/pkgconfig \
+%else
+	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
+%endif
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
 	-DQCA_PLUGINS_INSTALL_DIR=%{qtcryptodir} \
 	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10
