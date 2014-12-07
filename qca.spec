@@ -24,7 +24,7 @@ Release: 0.%git.4
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
-Release: 3
+Release: 4
 # Warning: Code coming from kdesupport to match kde development
 Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
 %endif
