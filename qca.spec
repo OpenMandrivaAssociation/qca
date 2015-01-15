@@ -15,12 +15,12 @@
 %define qt4lib %{_libdir}/qt4
 
 %define git 20140616
-%bcond_with qt5
+%bcond_without qt5
 
 Name: qca
 Version: 2.1.0
 %if 0%git
-Release: 0.%git.4
+Release: 0.%git.5
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
