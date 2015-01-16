@@ -20,7 +20,7 @@
 Name: qca
 Version: 2.1.0
 %if 0%git
-Release: 0.%git.5
+Release: 0.%git.6
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
@@ -47,7 +47,7 @@ BuildRequires: pkgconfig(libgcrypt)
 BuildRequires: sasl-devel
 BuildRequires: pkgconfig(nss)
 Obsoletes: qca2 < 2.0.1-3
-Provides: qca2 = %{version}-%{release}
+Provides: qca2 = %{EVRD}
 Requires: qt4-common >= 4.3
 
 %description
@@ -90,7 +90,7 @@ QCA tools for Qt 4.x
 %package -n %{name}-root-certificates
 Summary:	Common root CA certificates for QCA
 Group:		System/Libraries
-Requires:	%{lib_name} = %{version}-%{release}
+Requires:	%{lib_name} = %{EVRD}
 
 %description	-n %{name}-root-certificates
 Provides root Certificate Authority certificates for the QCA library.
@@ -111,9 +111,9 @@ Summary:	Libraries for QCA
 Group:		System/Libraries
 %if %{build_sys_rootcerts}
 Requires:	rootcerts
-Obsoletes:	%{name}-root-certificates
+Obsoletes:	%{name}-root-certificates < %{EVRD}
 %else
-Requires:	%{name}-root-certificates >= %{version}
+Requires:	%{name}-root-certificates >= %{EVRD}
 %endif
 Obsoletes:	%{lib_name}-static-devel 
 
@@ -137,11 +137,12 @@ Summary:	Libraries for QCA
 Group:		System/Libraries
 %if %{build_sys_rootcerts}
 Requires:	rootcerts
-Obsoletes:	%{name}-root-certificates
+Obsoletes:	%{name}-root-certificates < %{EVRD}
 %else
-Requires:	%{name}-root-certificates >= %{version}
+Requires:	%{name}-root-certificates >= %{EVRD}
 %endif
-Obsoletes:	%{lib_name}-static-devel 
+Obsoletes:	%{lib_name}-static-devel
+Requires:	%{lib_name} = %{EVRD}
 
 %description	-n %{lib_name}-qt4
 Libraries for QCA.
@@ -159,11 +160,11 @@ Libraries for QCA.
 %package	-n %{develname}-qt4
 Summary:	Development files for QCA
 Group:		Development/KDE and Qt
-Requires:	%{lib_name}-qt4 = %{version}-%{release}
-Provides:	%{name}-devel = %{version}-%{release}
-Provides:	%{name}-devel-qt4 = %{version}-%{release}
-Provides:	%{name}2-devel = %{version}-%{release}
-Provides:       %{name}2-devel-qt4 = %{version}-%{release}
+Requires:	%{lib_name}-qt4 = %{EVRD}
+Provides:	%{name}-devel = %{EVRD}
+Provides:	%{name}-devel-qt4 = %{EVRD}
+Provides:	%{name}2-devel = %{EVRD}
+Provides:	%{name}2-devel-qt4 = %{EVRD}
 Obsoletes:	%{mklibname -d qca 1} < 1.0-17
 Obsoletes:	%{mklibname -d qca 2} < 2.0.1-3
 
@@ -188,9 +189,9 @@ Development files for QCA.
 %package	-n %{develname}
 Summary:	Development files for QCA
 Group:		Development/KDE and Qt
-Requires:	%{lib_name} = %{version}-%{release}
-Provides:	%{name}-devel = %{version}-%{release}
-Provides:	%{name}2-devel = %{version}-%{release}
+Requires:	%{lib_name} = %{EVRD}
+Provides:	%{name}-devel = %{EVRD}
+Provides:	%{name}2-devel = %{EVRD}
 Obsoletes:	%{mklibname -d qca 1} < 1.0-17
 Obsoletes:	%{mklibname -d qca 2} < 2.0.1-3
 
@@ -226,7 +227,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: GnuPG plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca2-gnupg = %version
-Provides: qca2-plugin-gnupg-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-gnupg-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-gnupg-%{_lib} < 2.0.0-5
 
 %description -n %{lib_name}-qt4-plugin-gnupg
@@ -263,7 +264,7 @@ Group: Development/KDE and Qt
 BuildRequires: openssl-devel
 Provides: qca2-openssl = %version
 Provides: qca2-tls = %version
-Provides: qca2-plugin-openssl-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-openssl-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-openssl < 2.1.0
 Obsoletes: %{mklibname qca 1}-tls < 1.0-17
 
@@ -301,7 +302,7 @@ Group: Development/KDE and Qt
 BuildRequires: openssl-devel
 BuildRequires: pkcs11-helper-devel
 Provides: qca2-pkcs11 = %version
-Provides: qca2-plugin-pkcs11-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-pkcs11-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-pkcs11-%{_lib} < 2.0.0-5
 
 %description -n %{lib_name}-qt4-plugin-pkcs11
@@ -336,7 +337,7 @@ Summary: Cyrus-sasl plugin for QCA
 Group: Development/KDE and Qt
 BuildRequires: sasl-devel
 Provides: qca2-sasl = %version
-Provides: qca2-plugin-cyrus-sasl-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-cyrus-sasl-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-cyrus-sasl-%{_lib} < 2.0.0-5
 Obsoletes: %{mklibname qca 1}-sasl < 1.0-17
 
@@ -370,7 +371,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca2-logger = %version
-Provides: qca2-plugin-logger-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-logger-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-logger-%{_lib} < 2.0.0-5
 
 %description -n %{lib_name}-qt4-plugin-logger
@@ -387,7 +388,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-gcrypt
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
-Provides: qca-plugin-gcrypt-%{_lib} = %{version}-%{release}
+Provides: qca-plugin-gcrypt-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-gcrypt
 This is a plugin to provide gcrypt capability to programs that
@@ -403,7 +404,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca2-gcrypt = %version
-Provides: qca2-plugin-gcrypt-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-gcrypt-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-gcrypt-%{_lib} < 2.0.0-5
 
 %description -n %{lib_name}-qt4-plugin-gcrypt
@@ -436,7 +437,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca2-nss = %version
-Provides: qca2-plugin-nss-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-nss-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-nss-%{_lib} < 2.0.0-5
 
 %description -n %{lib_name}-qt4-plugin-nss
@@ -469,7 +470,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca2-softstore = %version
-Provides: qca2-plugin-softstore-%{_lib} = %{version}-%{release}
+Provides: qca2-plugin-softstore-%{_lib} = %{EVRD}
 Obsoletes: qca2-plugin-softstore-%{_lib} < 2.0.0-5
 
 %description -n %{lib_name}-qt4-plugin-softstore
