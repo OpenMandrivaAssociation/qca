@@ -4,7 +4,7 @@
 %define build_sys_rootcerts 1
 %{?_without_sys_rootcerts: %{expand: %%global build_sys_rootcerts 0}}
 
-%define qtcryptodir	%{qt4plugins}/crypto
+%define qtcryptodir	%{qt4plugins}
 %define lib_major	2
 %define lib_name	%mklibname %{name} %{lib_major}
 %define develname	%mklibname %{name} -d
@@ -14,19 +14,18 @@
 # same directory
 %define qt4lib %{_libdir}/qt4
 
-%define git 20140616
+%define git 20150120
 %bcond_without qt5
 
 Name: qca
-Version: 2.1.0
+Version: 2.1.0.3
 %if 0%git
 Release: 0.%git.6
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
 Release: 4
-# Warning: Code coming from kdesupport to match kde development
-Source0: http://delta.affinix.com/download/%{name}/2.0/%{name}-%{version}.tar.bz2
+Source0: http://download.kde.org/stable/%{name}-qt5/%{version}/src/%{name}-qt5-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
 License: LGPLv2+
@@ -181,6 +180,7 @@ Development files for QCA.
 %{qt4dir}/mkspecs/features/crypto.prf
 %dir %{qt4include}/QtCrypto
 %{qt4include}/QtCrypto/*
+%{_libdir}/qt4/cmake/Qca/*.cmake
 %{qt4lib}/libqca.so
 
 #------------------------------------------------------------------------------
@@ -202,6 +202,7 @@ Development files for QCA.
 %defattr(0644,root,root,0755)
 %{_libdir}/pkgconfig/qca2.pc
 %{_prefix}/mkspecs/features/crypto.prf
+%{_libdir}/cmake/Qca/*.cmake
 %{_includedir}/QtCrypto
 %{_libdir}/libqca.so
 %endif
@@ -513,7 +514,7 @@ use the Botan cryptography library as its backend.
 
 %prep
 %if 0%git
-%setup -q -n %name
+%setup -q -n %name-%{git}
 %else
 %setup -q -n %{name}-%{source_ver}
 %endif
