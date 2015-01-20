@@ -37,6 +37,7 @@ Patch2: qca-2.0.1-underlink.patch
 BuildRequires: qt4-devel >= 2:4.2
 %if %{with qt5}
 BuildRequires: qt5-devel
+BuildRequires: pkgconfig(Qt5Test)
 %endif
 %if %{build_sys_rootcerts}
 BuildRequires: rootcerts
