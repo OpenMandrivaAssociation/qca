@@ -15,7 +15,7 @@
 Name: qca
 Version: 2.1.0.3
 %if 0%git
-Release: 0.%git.6
+Release: 0.%git.7
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
