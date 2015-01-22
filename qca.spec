@@ -65,7 +65,7 @@ regulation.
 %{_bindir}/mozcerts-qt5
 %{_bindir}/qcatool-qt5
 %endif
-%_mandir/man1/*
+%_mandir/man1/qcatool-qt5.*
 
 #------------------------------------------------------------------------------
 %package tools-qt4
@@ -78,7 +78,7 @@ QCA tools for Qt 4.x
 %files tools-qt4
 %{_bindir}/mozcerts
 %{_bindir}/qcatool
-
+%_mandir/man1/qcatool.1*
 #------------------------------------------------------------------------------
 
 %if ! %{build_sys_rootcerts}
