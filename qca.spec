@@ -496,7 +496,7 @@ This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
 use the Botan cryptography library as its backend.
 
 %files -n %{lib_name}-plugin-botan
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-botan.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-botan.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -524,15 +524,10 @@ use the Botan cryptography library as its backend.
 %build
 %cmake_qt4 \
 	-DQT4_BUILD:BOOL=ON \
-	-DCMAKE_INSTALL_PREFIX=%{qt4dir} \
-	-DLIB_INSTALL_DIR=%{qt4lib} \
-%if %{with qt5}
-	-DPKGCONFIG_INSTALL_PREFIX=%{qt4lib}/pkgconfig \
-%else
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
+	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
-%endif
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DQCA_PLUGINS_INSTALL_DIR=%{qtcryptodir} \
 	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10
 %make
 
@@ -546,7 +541,8 @@ cmake .. \
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%_libdir/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
+    -DQCA_SUFFIX=qt5
 %make
 %endif
 
