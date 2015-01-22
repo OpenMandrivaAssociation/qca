@@ -67,8 +67,8 @@ regulation.
 %doc README COPYING INSTALL TODO
 %defattr(0755,root,root,0755)
 %if %{with qt5}
-%{_bindir}/mozcerts
-%{_bindir}/qcatool
+%{_bindir}/mozcerts-qt5
+%{_bindir}/qcatool-qt5
 %endif
 %_mandir/man1/*
 
@@ -81,8 +81,8 @@ Group:		System/Libraries
 QCA tools for Qt 4.x
 
 %files tools-qt4
-%{qt4dir}/bin/mozcerts
-%{qt4dir}/bin/qcatool
+%{_bindir}/bin/mozcerts
+%{_bindir}/bin/qcatool
 
 #------------------------------------------------------------------------------
 
@@ -124,10 +124,10 @@ Libraries for QCA.
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
 %if %{with qt5}
-%dir %{_libdir}/qca
-%dir %{_libdir}/qca/crypto
+%dir %{_libdir}/qca-qt5
+%dir %{_libdir}/qca-qt5/crypto
 %defattr(0755,root,root,0755)
-%{_libdir}/libqca.so.*
+%{_libdir}/libqca-qt5.so.*
 %endif
 
 #------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ Libraries for QCA.
 %doc README COPYING INSTALL TODO
 %dir %{qtcryptodir}
 %defattr(0755,root,root,0755)
-%{qt4lib}/libqca.so.*
+%{_libdir}/libqca.so.*
 
 
 #------------------------------------------------------------------------------
@@ -173,16 +173,12 @@ Development files for QCA.
 
 %files	-n %{develname}-qt4
 %defattr(0644,root,root,0755)
-%if %{with qt5}
-%{qt4lib}/pkgconfig/qca2.pc
-%else
 %{_libdir}/pkgconfig/qca2.pc
-%endif
 %{qt4dir}/mkspecs/features/crypto.prf
-%dir %{qt4include}/QtCrypto
-%{qt4include}/QtCrypto/*
-%{_libdir}/qt4/cmake/Qca/*.cmake
-%{qt4lib}/libqca.so
+%dir %{_includedir}/Qca/QtCrypto
+%{_includedir}/Qca/QtCrypto/*
+%{_libdir}/cmake/Qca/*.cmake
+%{_libdir}/libqca.so
 
 #------------------------------------------------------------------------------
 
@@ -201,11 +197,11 @@ Development files for QCA.
 
 %files	-n %{develname}
 %defattr(0644,root,root,0755)
-%{_libdir}/pkgconfig/qca2.pc
+%{_libdir}/pkgconfig/qca2-qt5.pc
 %{_prefix}/mkspecs/features/crypto.prf
 %{_libdir}/cmake/Qca/*.cmake
-%{_includedir}/QtCrypto
-%{_libdir}/libqca.so
+%{_includedir}/qca-qt5/QtCrypto
+%{_libdir}/libqca-qt5.so
 %endif
 #------------------------------------------------------------------------------
 
@@ -221,7 +217,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-gnupg
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gnupg.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-gnupg.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -238,7 +234,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-gnupg
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-gnupg.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gnupg.*
 
 #------------------------------------------------------------------------------
 
@@ -255,7 +251,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-openssl
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-ossl.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-ossl.*
 %endif
 
 #------------------------------------------------------------------------------
@@ -276,7 +272,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-openssl
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-ossl.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-ossl.*
 
 #------------------------------------------------------------------------------
 
@@ -294,7 +290,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-pkcs11
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-pkcs11.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-pkcs11.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -313,7 +309,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-pkcs11
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-pkcs11.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-pkcs11.*
 
 #------------------------------------------------------------------------------
 
@@ -330,7 +326,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-cyrus-sasl
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-cyrus-sasl.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-cyrus-sasl.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -349,7 +345,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-cyrus-sasl
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-cyrus-sasl.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-cyrus-sasl.*
 
 #------------------------------------------------------------------------------
 
@@ -365,7 +361,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-logger
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-logger.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-logger.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -382,7 +378,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-logger
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-logger.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-logger.*
 
 #------------------------------------------------------------------------------
 
@@ -398,7 +394,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-gcrypt
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gcrypt.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-gcrypt.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -415,7 +411,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-gcrypt
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-gcrypt.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-gcrypt.*
 
 #------------------------------------------------------------------------------
 
@@ -431,7 +427,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-nss
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-nss.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-nss.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -448,7 +444,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-nss
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-nss.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-nss.*
 
 #------------------------------------------------------------------------------
 
@@ -464,7 +460,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-plugin-softstore
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-softstore.*
+%attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-softstore.*
 %endif
 #------------------------------------------------------------------------------
 
@@ -481,7 +477,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{lib_name}-qt4-plugin-softstore
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-softstore.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-softstore.*
 
 #------------------------------------------------------------------------------
 
@@ -510,7 +506,7 @@ This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
 use the Botan cryptography library as its backend.
 
 %files -n %{lib_name}-qt4-plugin-botan
-%attr(0755,root,root) %{qt4plugins}/crypto/libqca-botan.*
+%attr(0755,root,root) %{_libdir}/qca/crypto/libqca-botan.*
 
 
 %prep
