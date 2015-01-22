@@ -4,15 +4,10 @@
 %define build_sys_rootcerts 1
 %{?_without_sys_rootcerts: %{expand: %%global build_sys_rootcerts 0}}
 
-%define qtcryptodir	%{qt4plugins}
 %define lib_major	2
 %define lib_name	%mklibname %{name} %{lib_major}
 %define develname	%mklibname %{name} -d
 %define source_ver	%{version}
-
-# Override to make sure Qt4 and Qt5 versions don't end up in the
-# same directory
-%define qt4lib %{_libdir}/qt4
 
 %define git 20150120
 %bcond_without qt5
@@ -81,8 +76,8 @@ Group:		System/Libraries
 QCA tools for Qt 4.x
 
 %files tools-qt4
-%{_bindir}/bin/mozcerts
-%{_bindir}/bin/qcatool
+%{_bindir}/mozcerts
+%{_bindir}/qcatool
 
 #------------------------------------------------------------------------------
 
@@ -150,7 +145,6 @@ Libraries for QCA.
 %files -n %{lib_name}-qt4
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
-%dir %{qtcryptodir}
 %defattr(0755,root,root,0755)
 %{_libdir}/libqca.so.*
 
@@ -175,9 +169,10 @@ Development files for QCA.
 %defattr(0644,root,root,0755)
 %{_libdir}/pkgconfig/qca2.pc
 %{qt4dir}/mkspecs/features/crypto.prf
-%dir %{_includedir}/Qca/QtCrypto
-%{_includedir}/Qca/QtCrypto/*
-%{_libdir}/cmake/Qca/*.cmake
+%dir %{_includedir}/QtCrypto
+%{_includedir}/QtCrypto/*
+%{_libdir}/cmake/Qca/QcaConfig*.cmake
+%{_libdir}/cmake/Qca/QcaTargets*.cmake
 %{_libdir}/libqca.so
 
 #------------------------------------------------------------------------------
@@ -199,8 +194,8 @@ Development files for QCA.
 %defattr(0644,root,root,0755)
 %{_libdir}/pkgconfig/qca2-qt5.pc
 %{_prefix}/mkspecs/features/crypto.prf
-%{_libdir}/cmake/Qca/*.cmake
-%{_includedir}/qca-qt5/QtCrypto
+%{_libdir}/cmake/Qca/Qca-qt5*.cmake
+%{_includedir}/Qca-qt5/QtCrypto
 %{_libdir}/libqca-qt5.so
 %endif
 #------------------------------------------------------------------------------
@@ -524,7 +519,8 @@ use the Botan cryptography library as its backend.
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
+	-DQCA_FEATURE_INSTALL_DIR=%{qt4dir}/mkspecs/features
 %make
 
 %if %{with qt5}
@@ -545,9 +541,6 @@ cmake .. \
 %install
 cd build
 make DESTDIR=%buildroot install
-
-# Make directory for plugins
-install -d -m 755 %{buildroot}/%{qtcryptodir}
 
 %if %{with qt5}
 cd ../build-qt5
