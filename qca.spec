@@ -100,7 +100,7 @@ These certificates are the same ones that are included in Mozilla.
 %endif
 
 #------------------------------------------------------------------------------
-
+%if %{with qt5}
 %package	-n %{lib_name}
 Summary:	Libraries for QCA
 Group:		System/Libraries
@@ -118,7 +118,6 @@ Libraries for QCA.
 %files -n %{lib_name}
 %defattr(0644,root,root,0755)
 %doc README COPYING INSTALL TODO
-%if %{with qt5}
 %dir %{_libdir}/qca-qt5
 %dir %{_libdir}/qca-qt5/crypto
 %defattr(0755,root,root,0755)
@@ -137,7 +136,6 @@ Obsoletes:	%{name}-root-certificates < %{EVRD}
 Requires:	%{name}-root-certificates >= %{EVRD}
 %endif
 Obsoletes:	%{lib_name}-static-devel
-Requires:	%{lib_name} = %{EVRD}
 
 %description	-n %{lib_name}-qt4
 Libraries for QCA.
