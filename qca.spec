@@ -517,7 +517,7 @@ use the Botan cryptography library as its backend.
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.11 \
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
 	-DQCA_FEATURE_INSTALL_DIR=%{qt4dir}/mkspecs/features
 %make
 
@@ -531,7 +531,7 @@ cmake .. \
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%_libdir/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.11 \
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
     -DQCA_SUFFIX=qt5
 %make
 %endif
