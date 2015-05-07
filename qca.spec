@@ -19,7 +19,7 @@ Release: 0.%git.7
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
-Release: 4
+Release: 5
 Source0: http://download.kde.org/stable/%{name}-qt5/%{version}/src/%{name}-qt5-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
@@ -478,7 +478,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-botan
 Summary:        Botan plugin for QCA
 Group:          Development/KDE and Qt
-BuildRequires:  pkgconfig(botan-1.10)
+BuildRequires:  botan-devel
 
 %description -n %{lib_name}-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
@@ -492,7 +492,7 @@ use the Botan cryptography library as its backend.
 %package -n %{lib_name}-qt4-plugin-botan
 Summary:        Botan plugin for QCA
 Group:          Development/KDE and Qt
-BuildRequires:  pkgconfig(botan-1.10)
+BuildRequires:  botan-devel
 
 %description -n %{lib_name}-qt4-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
@@ -517,7 +517,7 @@ use the Botan cryptography library as its backend.
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.11 \
 	-DQCA_FEATURE_INSTALL_DIR=%{qt4dir}/mkspecs/features
 %make
 
@@ -531,7 +531,7 @@ cmake .. \
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%_libdir/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.11 \
     -DQCA_SUFFIX=qt5
 %make
 %endif
