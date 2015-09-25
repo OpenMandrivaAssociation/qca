@@ -11,6 +11,7 @@
 
 %define git %{nil}
 %bcond_without qt5
+%bcond_with botan
 
 Name: qca
 Version: 2.1.0.3
@@ -476,6 +477,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with botan}
 %if %{with qt5}
 %package -n %{lib_name}-plugin-botan
 Summary:        Botan plugin for QCA
@@ -502,6 +504,7 @@ use the Botan cryptography library as its backend.
 
 %files -n %{lib_name}-qt4-plugin-botan
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-botan.*
+%endif
 
 
 %prep
@@ -512,14 +515,21 @@ use the Botan cryptography library as its backend.
 %endif
 %apply_patches
 
+sed -i 's!botan-config botan-config-1.10!botan!g' ./cmake/modules/FindBotan.cmake
+sed -i 's!--libs!config libs!g' ./cmake/modules/FindBotan.cmake
+sed -i 's!--cflags!config cflags!g' ./cmake/modules/FindBotan.cmake
+
 %build
+CXXFLAGS="%{optflags} -std=c++11"
 %cmake_qt4 \
 	-DQT4_BUILD:BOOL=ON \
 	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
+%if %{with botan}
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan \
+%endif
 	-DQCA_FEATURE_INSTALL_DIR=%{qt4dir}/mkspecs/features
 %make
 
@@ -533,8 +543,10 @@ cmake .. \
 	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DPKGCONFIG_INSTALL_PREFIX=%_libdir/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
-	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan-config-1.10 \
-    -DQCA_SUFFIX=qt5
+%if %{with botan}
+	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan \
+%endif
+	-DQCA_SUFFIX=qt5
 %make
 %endif
 
