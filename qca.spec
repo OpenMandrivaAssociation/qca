@@ -20,7 +20,7 @@ Release: 0.%git.8
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
-Release: 1
+Release: 2
 Source0: http://download.kde.org/stable/%{name}-qt5/%{version}/src/%{name}-qt5-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
