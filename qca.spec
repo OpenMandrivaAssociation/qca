@@ -14,14 +14,14 @@
 %bcond_with botan
 
 Name: qca
-Version: 2.1.0.3
+Version: 2.1.1
 %if 0%git
 Release: 0.%git.8
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%git.tar.xz
 %else
-Release: 2
-Source0: http://download.kde.org/stable/%{name}-qt5/%{version}/src/%{name}-qt5-%{version}.tar.xz
+Release: 1
+Source0: http://download.kde.org/stable/%{name}/%{version}/src/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
 License: LGPLv2+
@@ -30,7 +30,6 @@ Group: System/Libraries
 URL: http://delta.affinix.com/qca
 # Fix underlinking in the openssl plugin - AdamW 2008/12
 Patch2: qca-2.0.1-underlink.patch
-Patch3:	qca-qt5-2.1.0.3-fix-build.patch
 
 BuildRequires: qt4-devel >= 2:4.2
 %if %{with qt5}
@@ -511,7 +510,7 @@ use the Botan cryptography library as its backend.
 %if 0%git
 %setup -q -n %name-%{git}
 %else
-%setup -q -n %{name}-qt5-%{source_ver}
+%setup -q -n %{name}-%{source_ver}
 %endif
 %apply_patches
 
