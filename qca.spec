@@ -9,7 +9,7 @@
 %define develname	%mklibname %{name} -d
 %define source_ver	%{version}
 
-%define git %{nil}
+%define git 20160404
 %bcond_without qt5
 %bcond_with botan
 
@@ -18,7 +18,7 @@ Version: 2.1.1
 %if 0%git
 Release: 0.%git.8
 # From git export git://anongit.kde.org/qca.git
-Source0: qca-%git.tar.xz
+Source0: qca-%{version}-%git.tar.xz
 %else
 Release: 3
 Source0: http://download.kde.org/stable/%{name}/%{version}/src/%{name}-%{version}.tar.xz
@@ -508,7 +508,7 @@ use the Botan cryptography library as its backend.
 
 %prep
 %if 0%git
-%setup -q -n %name-%{git}
+%setup -q -n %name-%{version}-%{git}
 %else
 %setup -q -n %{name}-%{source_ver}
 %endif
