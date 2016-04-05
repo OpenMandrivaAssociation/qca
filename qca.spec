@@ -519,7 +519,7 @@ sed -i 's!--libs!config libs!g' ./cmake/modules/FindBotan.cmake
 sed -i 's!--cflags!config cflags!g' ./cmake/modules/FindBotan.cmake
 
 %build
-CXXFLAGS="%{optflags} -std=c++11"
+CXXFLAGS="%{optflags}"
 %cmake_qt4 \
 	-DQT4_BUILD:BOOL=ON \
 	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
