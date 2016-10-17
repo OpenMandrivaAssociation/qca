@@ -16,7 +16,7 @@
 Name: qca
 Version: 2.1.1
 %if 0%git
-Release: 0.%git.8
+Release: 0.%git.9
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
@@ -193,7 +193,7 @@ Development files for QCA.
 %files	-n %{develname}
 %defattr(0644,root,root,0755)
 %{_libdir}/pkgconfig/qca2-qt5.pc
-%{_prefix}/mkspecs/features/crypto.prf
+%{_libdir}/qt5/mkspecs/features/crypto.prf
 %{_libdir}/cmake/Qca-qt5
 %{_includedir}/Qca-qt5
 %{_libdir}/libqca-qt5.so
@@ -556,4 +556,8 @@ make DESTDIR=%buildroot install
 %if %{with qt5}
 cd ../build-qt5
 make DESTDIR=%buildroot install
+mkdir -p %{buildroot}%{_libdir}/qt5
+mv %{buildroot}%{_prefix}/mkspecs %{buildroot}%{_libdir}/qt5
+
+
 %endif
