@@ -9,18 +9,19 @@
 %define develname	%mklibname %{name} -d
 %define source_ver	%{version}
 
-%define git 20160404
+%define git 20161114
 %bcond_without qt5
 %bcond_with botan
+%bcond_with openssl
 
 Name: qca
 Version: 2.1.1
 %if 0%git
-Release: 0.%git.9
+Release: 0.%git.1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 3
+Release: 1
 Source0: http://download.kde.org/stable/%{name}/%{version}/src/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
@@ -30,6 +31,8 @@ Group: System/Libraries
 URL: http://delta.affinix.com/qca
 # Fix underlinking in the openssl plugin - AdamW 2008/12
 Patch2: qca-2.0.1-underlink.patch
+# Not yet ready...
+# Patch3: qca-2.1.1-openssl-1.1.patch
 
 BuildRequires: qt4-devel >= 2:4.2
 %if %{with qt5}
@@ -233,6 +236,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 #------------------------------------------------------------------------------
 
+%if %{with openssl}
 %if %{with qt5}
 %package -n %{lib_name}-plugin-openssl
 Summary: OpenSSL plugin for QCA
@@ -268,6 +272,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-qt4-plugin-openssl
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_libdir}/qca/crypto/libqca-ossl.*
+%endif
 
 #------------------------------------------------------------------------------
 
@@ -529,6 +534,9 @@ CXXFLAGS="%{optflags}"
 %if %{with botan}
 	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan \
 %endif
+%if ! %{with openssl}
+	-DWITH_ossl_PLUGIN:BOOL=OFF \
+%endif
 	-DQCA_FEATURE_INSTALL_DIR=%{qt4dir}/mkspecs/features
 %make
 
@@ -544,6 +552,9 @@ cmake .. \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
 %if %{with botan}
 	-DBOTANCONFIG_EXECUTABLE=%{_bindir}/botan \
+%endif
+%if ! %{with openssl}
+	-DWITH_ossl_PLUGIN:BOOL=OFF \
 %endif
 	-DQCA_SUFFIX=qt5
 %make
