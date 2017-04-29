@@ -12,7 +12,7 @@
 %define git %nil
 %bcond_without qt5
 %bcond_with botan
-%bcond_without openssl
+%bcond_with openssl
 
 Name: qca
 Version: 2.1.3
