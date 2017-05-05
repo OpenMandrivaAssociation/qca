@@ -1,0 +1,1255 @@
+--- qca-2.1.1-20161114/plugins/qca-ossl/qca-ossl.cpp.omv~	2016-11-14 13:39:08.170050803 +0100
++++ qca-2.1.1-20161114/plugins/qca-ossl/qca-ossl.cpp	2016-11-14 15:24:25.953646028 +0100
+@@ -94,7 +94,7 @@ static QByteArray bio2ba(BIO *b)
+ 	return buf;
+ }
+ 
+-static BigInteger bn2bi(BIGNUM *n)
++static BigInteger bn2bi(const BIGNUM *n)
+ {
+ 	SecureArray buf(BN_num_bytes(n) + 1);
+ 	buf[0] = 0; // positive
+@@ -110,7 +110,7 @@ static BIGNUM *bi2bn(const BigInteger &n
+ 
+ // take lowest bytes of BIGNUM to fit
+ // pad with high byte zeroes to fit
+-static SecureArray bn2fixedbuf(BIGNUM *n, int size)
++static SecureArray bn2fixedbuf(const BIGNUM *n, int size)
+ {
+ 	SecureArray buf(BN_num_bytes(n));
+ 	BN_bn2bin(n, (unsigned char *)buf.data());
+@@ -128,8 +128,10 @@ static SecureArray dsasig_der_to_raw(con
+ 	const unsigned char *inp = (const unsigned char *)in.data();
+ 	d2i_DSA_SIG(&sig, &inp, in.size());
+ 
+-	SecureArray part_r = bn2fixedbuf(sig->r, 20);
+-	SecureArray part_s = bn2fixedbuf(sig->s, 20);
++	const BIGNUM *pr, *ps;
++	DSA_SIG_get0(sig, &pr, &ps);
++	SecureArray part_r = bn2fixedbuf(pr, 20);
++	SecureArray part_s = bn2fixedbuf(ps, 20);
+ 	SecureArray result;
+ 	result.append(part_r);
+ 	result.append(part_s);
+@@ -148,8 +150,9 @@ static SecureArray dsasig_raw_to_der(con
+ 	SecureArray part_s(20);
+ 	memcpy(part_r.data(), in.data(), 20);
+ 	memcpy(part_s.data(), in.data() + 20, 20);
+-	sig->r = BN_bin2bn((const unsigned char *)part_r.data(), part_r.size(), NULL);
+-	sig->s = BN_bin2bn((const unsigned char *)part_s.data(), part_s.size(), NULL);
++	BIGNUM *r = BN_bin2bn((const unsigned char *)part_r.data(), part_r.size(), NULL);
++	BIGNUM *s = BN_bin2bn((const unsigned char *)part_s.data(), part_s.size(), NULL);
++	DSA_SIG_set0(sig, r, s);
+ 
+ 	int len = i2d_DSA_SIG(sig, NULL);
+ 	SecureArray result(len);
+@@ -400,7 +403,7 @@ static GENERAL_NAME *new_general_name(co
+ 	{
+ 		QByteArray buf = val.toLatin1();
+ 
+-		ASN1_IA5STRING *str = M_ASN1_IA5STRING_new();
++		ASN1_IA5STRING *str = ASN1_IA5STRING_new();
+ 		ASN1_STRING_set((ASN1_STRING *)str, (unsigned char *)buf.data(), buf.size());
+ 
+ 		name = GENERAL_NAME_new();
+@@ -412,7 +415,7 @@ static GENERAL_NAME *new_general_name(co
+ 	{
+ 		QByteArray buf = val.toLatin1();
+ 
+-		ASN1_IA5STRING *str = M_ASN1_IA5STRING_new();
++		ASN1_IA5STRING *str = ASN1_IA5STRING_new();
+ 		ASN1_STRING_set((ASN1_STRING *)str, (unsigned char *)buf.data(), buf.size());
+ 
+ 		name = GENERAL_NAME_new();
+@@ -424,7 +427,7 @@ static GENERAL_NAME *new_general_name(co
+ 	{
+ 		QByteArray buf = val.toLatin1();
+ 
+-		ASN1_IA5STRING *str = M_ASN1_IA5STRING_new();
++		ASN1_IA5STRING *str = ASN1_IA5STRING_new();
+ 		ASN1_STRING_set((ASN1_STRING *)str, (unsigned char *)buf.data(), buf.size());
+ 
+ 		name = GENERAL_NAME_new();
+@@ -1005,29 +1008,31 @@ public:
+ 	opensslHashContext(const EVP_MD *algorithm, Provider *p, const QString &type) : HashContext(p, type)
+ 	{
+ 		m_algorithm = algorithm;
+-		EVP_DigestInit( &m_context, m_algorithm );
++		m_context = EVP_MD_CTX_new();
++		EVP_DigestInit( m_context, m_algorithm );
+ 	}
+ 
+ 	~opensslHashContext()
+ 	{
+-		EVP_MD_CTX_cleanup(&m_context);
++		EVP_MD_CTX_free(m_context);
+ 	}
+ 
+ 	void clear()
+ 	{
+-		EVP_MD_CTX_cleanup(&m_context);
+-		EVP_DigestInit( &m_context, m_algorithm );
++		EVP_MD_CTX_free(m_context);
++		m_context = EVP_MD_CTX_new();
++		EVP_DigestInit( m_context, m_algorithm );
+ 	}
+ 
+ 	void update(const MemoryRegion &a)
+ 	{
+-		EVP_DigestUpdate( &m_context, (unsigned char*)a.data(), a.size() );
++		EVP_DigestUpdate( m_context, (unsigned char*)a.data(), a.size() );
+ 	}
+ 
+ 	MemoryRegion final()
+ 	{
+ 		SecureArray a( EVP_MD_size( m_algorithm ) );
+-		EVP_DigestFinal( &m_context, (unsigned char*)a.data(), 0 );
++		EVP_DigestFinal( m_context, (unsigned char*)a.data(), 0 );
+ 		return a;
+ 	}
+ 
+@@ -1038,7 +1043,7 @@ public:
+ 
+ protected:
+ 	const EVP_MD *m_algorithm;
+-	EVP_MD_CTX m_context;
++	EVP_MD_CTX *m_context;
+ };
+ 
+ 
+@@ -1048,7 +1053,13 @@ public:
+ 	opensslPbkdf1Context(const EVP_MD *algorithm, Provider *p, const QString &type) : KDFContext(p, type)
+ 	{
+ 		m_algorithm = algorithm;
+-		EVP_DigestInit( &m_context, m_algorithm );
++		m_context = EVP_MD_CTX_new();
++		EVP_DigestInit( m_context, m_algorithm );
++	}
++	
++	~opensslPbkdf1Context()
++	{
++		EVP_MD_CTX_free(m_context);
+ 	}
+ 
+ 	Provider::Context *clone() const
+@@ -1082,16 +1093,16 @@ public:
+ 		  DK = Tc<0..dkLen-1>
+ 		*/
+ 		// calculate T_1
+-		EVP_DigestUpdate( &m_context, (unsigned char*)secret.data(), secret.size() );
+-		EVP_DigestUpdate( &m_context, (unsigned char*)salt.data(), salt.size() );
++		EVP_DigestUpdate( m_context, (unsigned char*)secret.data(), secret.size() );
++		EVP_DigestUpdate( m_context, (unsigned char*)salt.data(), salt.size() );
+ 		SecureArray a( EVP_MD_size( m_algorithm ) );
+-		EVP_DigestFinal( &m_context, (unsigned char*)a.data(), 0 );
++		EVP_DigestFinal( m_context, (unsigned char*)a.data(), 0 );
+ 
+ 		// calculate T_2 up to T_c
+ 		for ( unsigned int i = 2; i <= iterationCount; ++i ) {
+-			EVP_DigestInit( &m_context, m_algorithm );
+-			EVP_DigestUpdate( &m_context, (unsigned char*)a.data(), a.size() );
+-			EVP_DigestFinal( &m_context, (unsigned char*)a.data(), 0 );
++			EVP_DigestInit( m_context, m_algorithm );
++			EVP_DigestUpdate( m_context, (unsigned char*)a.data(), a.size() );
++			EVP_DigestFinal( m_context, (unsigned char*)a.data(), 0 );
+ 		}
+ 
+ 		// shrink a to become DK, of the required length
+@@ -1137,19 +1148,19 @@ public:
+ 		  DK = Tc<0..dkLen-1>
+ 		*/
+ 		// calculate T_1
+-		EVP_DigestUpdate( &m_context, (unsigned char*)secret.data(), secret.size() );
+-		EVP_DigestUpdate( &m_context, (unsigned char*)salt.data(), salt.size() );
++		EVP_DigestUpdate( m_context, (unsigned char*)secret.data(), secret.size() );
++		EVP_DigestUpdate( m_context, (unsigned char*)salt.data(), salt.size() );
+ 		SecureArray a( EVP_MD_size( m_algorithm ) );
+-		EVP_DigestFinal( &m_context, (unsigned char*)a.data(), 0 );
++		EVP_DigestFinal( m_context, (unsigned char*)a.data(), 0 );
+ 
+ 		// calculate T_2 up to T_c
+ 		*iterationCount = 2 - 1;	// <- Have to remove 1, unless it computes one
+ 		timer.start();				// ^  time more than the base function
+ 									// ^  with the same iterationCount
+ 		while (timer.elapsed() < msecInterval) {
+-			EVP_DigestInit( &m_context, m_algorithm );
+-			EVP_DigestUpdate( &m_context, (unsigned char*)a.data(), a.size() );
+-			EVP_DigestFinal( &m_context, (unsigned char*)a.data(), 0 );
++			EVP_DigestInit( m_context, m_algorithm );
++			EVP_DigestUpdate( m_context, (unsigned char*)a.data(), a.size() );
++			EVP_DigestFinal( m_context, (unsigned char*)a.data(), 0 );
+ 			++(*iterationCount);
+ 		}
+ 
+@@ -1164,7 +1175,7 @@ public:
+ 
+ protected:
+ 	const EVP_MD *m_algorithm;
+-	EVP_MD_CTX m_context;
++	EVP_MD_CTX *m_context;
+ };
+ 
+ class opensslPbkdf2Context : public KDFContext
+@@ -1232,12 +1243,17 @@ public:
+ 	opensslHMACContext(const EVP_MD *algorithm, Provider *p, const QString &type) : MACContext(p, type)
+ 	{
+ 		m_algorithm = algorithm;
+-		HMAC_CTX_init( &m_context );
++		m_context = HMAC_CTX_new();
++	}
++
++	~opensslHMACContext()
++	{
++		HMAC_CTX_free(m_context);
+ 	}
+ 
+ 	void setup(const SymmetricKey &key)
+ 	{
+-		HMAC_Init_ex( &m_context, key.data(), key.size(), m_algorithm, 0 );
++		HMAC_Init_ex( m_context, key.data(), key.size(), m_algorithm, 0 );
+ 	}
+ 
+ 	KeyLength keyLength() const
+@@ -1247,14 +1263,15 @@ public:
+ 
+ 	void update(const MemoryRegion &a)
+ 	{
+-		HMAC_Update( &m_context, (unsigned char *)a.data(), a.size() );
++		HMAC_Update( m_context, (unsigned char *)a.data(), a.size() );
+ 	}
+ 
+ 	void final(MemoryRegion *out)
+ 	{
+ 		SecureArray sa( EVP_MD_size( m_algorithm ), 0 );
+-		HMAC_Final(&m_context, (unsigned char *)sa.data(), 0 );
+-		HMAC_CTX_cleanup(&m_context);
++		HMAC_Final(m_context, (unsigned char *)sa.data(), 0 );
++		HMAC_CTX_free(m_context);
++		m_context = HMAC_CTX_new();
+ 		*out = sa;
+ 	}
+ 
+@@ -1264,7 +1281,7 @@ public:
+ 	}
+ 
+ protected:
+-	HMAC_CTX m_context;
++	HMAC_CTX *m_context;
+ 	const EVP_MD *m_algorithm;
+ };
+ 
+@@ -1278,7 +1295,7 @@ class EVPKey
+ public:
+ 	enum State { Idle, SignActive, SignError, VerifyActive, VerifyError };
+ 	EVP_PKEY *pkey;
+-	EVP_MD_CTX mdctx;
++	EVP_MD_CTX *mdctx;
+ 	State state;
+ 	bool raw_type;
+ 	SecureArray raw;
+@@ -1288,19 +1305,22 @@ public:
+ 		pkey = 0;
+ 		raw_type = false;
+ 		state = Idle;
++		mdctx = EVP_MD_CTX_new();
+ 	}
+ 
+ 	EVPKey(const EVPKey &from)
+ 	{
+ 		pkey = from.pkey;
+-		CRYPTO_add(&pkey->references, 1, CRYPTO_LOCK_EVP_PKEY);
++		EVP_PKEY_up_ref(pkey);
+ 		raw_type = false;
+ 		state = Idle;
++		mdctx = EVP_MD_CTX_new();
+ 	}
+ 
+ 	~EVPKey()
+ 	{
+ 		reset();
++		EVP_MD_CTX_free(mdctx);
+ 	}
+ 
+ 	void reset()
+@@ -1323,8 +1343,8 @@ public:
+ 		else
+ 		{
+ 			raw_type = false;
+-			EVP_MD_CTX_init(&mdctx);
+-			if(!EVP_SignInit_ex(&mdctx, type, NULL))
++			EVP_MD_CTX_init(mdctx);
++			if(!EVP_SignInit_ex(mdctx, type, NULL))
+ 				state = SignError;
+ 		}
+ 	}
+@@ -1340,8 +1360,8 @@ public:
+ 		else
+ 		{
+ 			raw_type = false;
+-			EVP_MD_CTX_init(&mdctx);
+-			if(!EVP_VerifyInit_ex(&mdctx, type, NULL))
++			EVP_MD_CTX_init(mdctx);
++			if(!EVP_VerifyInit_ex(mdctx, type, NULL))
+ 				state = VerifyError;
+ 		}
+ 	}
+@@ -1353,7 +1373,7 @@ public:
+ 			if (raw_type)
+ 				raw += in;
+ 			else
+-				if(!EVP_SignUpdate(&mdctx, in.data(), (unsigned int)in.size()))
++				if(!EVP_SignUpdate(mdctx, in.data(), (unsigned int)in.size()))
+ 					state = SignError;
+ 		}
+ 		else if(state == VerifyActive)
+@@ -1361,7 +1381,7 @@ public:
+ 			if (raw_type)
+ 				raw += in;
+ 			else
+-				if(!EVP_VerifyUpdate(&mdctx, in.data(), (unsigned int)in.size()))
++				if(!EVP_VerifyUpdate(mdctx, in.data(), (unsigned int)in.size()))
+ 					state = VerifyError;
+ 		}
+ 	}
+@@ -1374,17 +1394,18 @@ public:
+ 			unsigned int len = out.size();
+ 			if (raw_type)
+ 			{
+-				if (pkey->type == EVP_PKEY_RSA)
++				if (EVP_PKEY_id(pkey) == EVP_PKEY_RSA)
+ 				{
++					RSA *rsa = EVP_PKEY_get0_RSA(pkey);
+ 					if(RSA_private_encrypt (raw.size(), (unsigned char *)raw.data(),
+-											(unsigned char *)out.data(), pkey->pkey.rsa,
++											(unsigned char *)out.data(), rsa,
+ 											RSA_PKCS1_PADDING) == -1) {
+ 
+ 						state = SignError;
+ 						return SecureArray ();
+ 					}
+ 				}
+-				else if (pkey->type == EVP_PKEY_DSA)
++				else if (EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+ 				{
+ 					state = SignError;
+ 					return SecureArray ();
+@@ -1396,7 +1417,7 @@ public:
+ 				}
+ 			}
+ 			else {
+-				if(!EVP_SignFinal(&mdctx, (unsigned char *)out.data(), &len, pkey))
++				if(!EVP_SignFinal(mdctx, (unsigned char *)out.data(), &len, pkey))
+ 				{
+ 					state = SignError;
+ 					return SecureArray();
+@@ -1419,16 +1440,17 @@ public:
+ 				SecureArray out(EVP_PKEY_size(pkey));
+ 				int len = 0;
+ 
+-				if (pkey->type == EVP_PKEY_RSA) {
++				if (EVP_PKEY_id(pkey) == EVP_PKEY_RSA) {
++					RSA *rsa = EVP_PKEY_get0_RSA(pkey);
+ 					if((len = RSA_public_decrypt (sig.size(), (unsigned char *)sig.data(),
+-												  (unsigned char *)out.data (), pkey->pkey.rsa,
++												  (unsigned char *)out.data (), rsa,
+ 												  RSA_PKCS1_PADDING)) == -1) {
+ 
+ 						state = VerifyError;
+ 						return false;
+ 					}
+ 				}
+-				else if (pkey->type == EVP_PKEY_DSA)
++				else if (EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+ 				{
+ 					state = VerifyError;
+ 					return false;
+@@ -1448,7 +1470,7 @@ public:
+ 			}
+ 			else
+ 			{
+-				if(EVP_VerifyFinal(&mdctx, (unsigned char *)sig.data(), (unsigned int)sig.size(), pkey) != 1)
++				if(EVP_VerifyFinal(mdctx, (unsigned char *)sig.data(), (unsigned int)sig.size(), pkey) != 1)
+ 				{
+ 					state = VerifyError;
+ 					return false;
+@@ -1827,15 +1849,15 @@ public:
+ 			return;
+ 
+ 		// extract the public key into DER format
+-		int len = i2d_RSAPublicKey(evp.pkey->pkey.rsa, NULL);
++		RSA *rsa = EVP_PKEY_get0_RSA(evp.pkey);
++		int len = i2d_RSAPublicKey(rsa, NULL);
+ 		SecureArray result(len);
+ 		unsigned char *p = (unsigned char *)result.data();
+-		i2d_RSAPublicKey(evp.pkey->pkey.rsa, &p);
++		i2d_RSAPublicKey(rsa, &p);
+ 		p = (unsigned char *)result.data();
+ 
+ 		// put the DER public key back into openssl
+ 		evp.reset();
+-		RSA *rsa;
+ #ifdef OSSL_097
+ 		rsa = d2i_RSAPublicKey(NULL, (const unsigned char **)&p, result.size());
+ #else
+@@ -1853,7 +1875,7 @@ public:
+ 
+ 	virtual int maximumEncryptSize(EncryptionAlgorithm alg) const
+ 	{
+-		RSA *rsa = evp.pkey->pkey.rsa;
++		RSA *rsa = EVP_PKEY_get0_RSA(evp.pkey);
+ 		int size = 0;
+ 		switch(alg)
+ 		{
+@@ -1868,7 +1890,7 @@ public:
+ 
+ 	virtual SecureArray encrypt(const SecureArray &in, EncryptionAlgorithm alg)
+ 	{
+-		RSA *rsa = evp.pkey->pkey.rsa;
++		RSA *rsa = EVP_PKEY_get0_RSA(evp.pkey);
+ 		SecureArray buf = in;
+ 		int max = maximumEncryptSize(alg);
+ 
+@@ -1901,7 +1923,7 @@ public:
+ 
+ 	virtual bool decrypt(const SecureArray &in, SecureArray *out, EncryptionAlgorithm alg)
+ 	{
+-		RSA *rsa = evp.pkey->pkey.rsa;
++		RSA *rsa = EVP_PKEY_get0_RSA(evp.pkey);
+ 		SecureArray result(RSA_size(rsa));
+ 		int pad;
+ 
+@@ -2022,13 +2044,13 @@ public:
+ 		evp.reset();
+ 
+ 		RSA *rsa = RSA_new();
+-		rsa->n = bi2bn(n);
+-		rsa->e = bi2bn(e);
+-		rsa->p = bi2bn(p);
+-		rsa->q = bi2bn(q);
+-		rsa->d = bi2bn(d);
++		RSA_set0_key(rsa, bi2bn(n), bi2bn(e), bi2bn(d));
++		RSA_set0_factors(rsa, bi2bn(p), bi2bn(q));
+ 
+-		if(!rsa->n || !rsa->e || !rsa->p || !rsa->q || !rsa->d)
++		const BIGNUM *rn, *re, *rp, *rq, *rd;
++		RSA_get0_key(rsa, &rn, &re, &rd);
++		RSA_get0_factors(rsa, &rp, &rq);
++		if(!rn || !re || !rp || !rq || !rd)
+ 		{
+ 			RSA_free(rsa);
+ 			return;
+@@ -2037,7 +2059,7 @@ public:
+ 		// When private key has no Public Exponent (e) or Private Exponent (d)
+ 		// need to disable blinding. Otherwise decryption will be broken.
+ 		// http://www.mail-archive.com/openssl-users@openssl.org/msg63530.html
+-		if(BN_is_zero(rsa->e) || BN_is_zero(rsa->d))
++		if(BN_is_zero(re) || BN_is_zero(rd))
+ 			RSA_blinding_off(rsa);
+ 
+ 		evp.pkey = EVP_PKEY_new();
+@@ -2050,14 +2072,14 @@ public:
+ 		evp.reset();
+ 
+ 		RSA *rsa = RSA_new();
+-		rsa->n = bi2bn(n);
+-		rsa->e = bi2bn(e);
+-
+-		if(!rsa->n || !rsa->e)
++		BIGNUM *rn = bi2bn(n);
++		BIGNUM *re = bi2bn(e);
++		if(!rn || !re)
+ 		{
+ 			RSA_free(rsa);
+ 			return;
+ 		}
++		RSA_set0_key(rsa, rn, re, NULL);
+ 
+ 		evp.pkey = EVP_PKEY_new();
+ 		EVP_PKEY_assign_RSA(evp.pkey, rsa);
+@@ -2066,27 +2088,37 @@ public:
+ 
+ 	virtual BigInteger n() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.rsa->n);
++		const BIGNUM *rn;
++		RSA_get0_key(EVP_PKEY_get0_RSA(evp.pkey), &rn, NULL, NULL);
++		return bn2bi(rn);
+ 	}
+ 
+ 	virtual BigInteger e() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.rsa->e);
++		const BIGNUM *re;
++		RSA_get0_key(EVP_PKEY_get0_RSA(evp.pkey), NULL, &re, NULL);
++		return bn2bi(re);
+ 	}
+ 
+ 	virtual BigInteger p() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.rsa->p);
++		const BIGNUM *rp;
++		RSA_get0_factors(EVP_PKEY_get0_RSA(evp.pkey), &rp, NULL);
++		return bn2bi(rp);
+ 	}
+ 
+ 	virtual BigInteger q() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.rsa->q);
++		const BIGNUM *rq;
++		RSA_get0_factors(EVP_PKEY_get0_RSA(evp.pkey), NULL, &rq);
++		return bn2bi(rq);
+ 	}
+ 
+ 	virtual BigInteger d() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.rsa->d);
++		const BIGNUM *rd;
++		RSA_get0_key(EVP_PKEY_get0_RSA(evp.pkey), NULL, NULL, &rd);
++		return bn2bi(rd);
+ 	}
+ 
+ private slots:
+@@ -2135,9 +2167,7 @@ public:
+ 	virtual void run()
+ 	{
+ 		DSA *dsa = DSA_new();
+-		dsa->p = bi2bn(domain.p());
+-		dsa->q = bi2bn(domain.q());
+-		dsa->g = bi2bn(domain.g());
++		DSA_set0_pqg(dsa, bi2bn(domain.p()), bi2bn(domain.q()), bi2bn(domain.g()));
+ 		if(!DSA_generate_key(dsa))
+ 		{
+ 			DSA_free(dsa);
+@@ -2213,10 +2243,10 @@ public:
+ 			return;
+ 
+ 		// extract the public key into DER format
+-		int len = i2d_DSAPublicKey(evp.pkey->pkey.dsa, NULL);
++		int len = i2d_DSAPublicKey(EVP_PKEY_get0_DSA(evp.pkey), NULL);
+ 		SecureArray result(len);
+ 		unsigned char *p = (unsigned char *)result.data();
+-		i2d_DSAPublicKey(evp.pkey->pkey.dsa, &p);
++		i2d_DSAPublicKey(EVP_PKEY_get0_DSA(evp.pkey), &p);
+ 		p = (unsigned char *)result.data();
+ 
+ 		// put the DER public key back into openssl
+@@ -2245,7 +2275,7 @@ public:
+ 		else
+ 			transformsig = false;
+ 
+-		evp.startSign(EVP_dss1());
++		evp.startSign(EVP_sha1());
+ 	}
+ 
+ 	virtual void startVerify(SignatureAlgorithm, SignatureFormat format)
+@@ -2256,7 +2286,7 @@ public:
+ 		else
+ 			transformsig = false;
+ 
+-		evp.startVerify(EVP_dss1());
++		evp.startVerify(EVP_sha1());
+ 	}
+ 
+ 	virtual void update(const MemoryRegion &in)
+@@ -2306,18 +2336,21 @@ public:
+ 		evp.reset();
+ 
+ 		DSA *dsa = DSA_new();
+-		dsa->p = bi2bn(domain.p());
+-		dsa->q = bi2bn(domain.q());
+-		dsa->g = bi2bn(domain.g());
+-		dsa->pub_key = bi2bn(y);
+-		dsa->priv_key = bi2bn(x);
++		BIGNUM *p = bi2bn(domain.p());
++		BIGNUM *q = bi2bn(domain.q());
++		BIGNUM *g = bi2bn(domain.g());
++		BIGNUM *pub = bi2bn(y);
++		BIGNUM *priv = bi2bn(x);
+ 
+-		if(!dsa->p || !dsa->q || !dsa->g || !dsa->pub_key || !dsa->priv_key)
++		if(!p || !q || !g || !pub || !priv)
+ 		{
+ 			DSA_free(dsa);
+ 			return;
+ 		}
+ 
++		DSA_set0_pqg(dsa, p, q, g);
++		DSA_set0_key(dsa, pub, priv);
++
+ 		evp.pkey = EVP_PKEY_new();
+ 		EVP_PKEY_assign_DSA(evp.pkey, dsa);
+ 		sec = true;
+@@ -2328,17 +2361,20 @@ public:
+ 		evp.reset();
+ 
+ 		DSA *dsa = DSA_new();
+-		dsa->p = bi2bn(domain.p());
+-		dsa->q = bi2bn(domain.q());
+-		dsa->g = bi2bn(domain.g());
+-		dsa->pub_key = bi2bn(y);
++		BIGNUM *p = bi2bn(domain.p());
++		BIGNUM *q = bi2bn(domain.q());
++		BIGNUM *g = bi2bn(domain.g());
++		BIGNUM *pub = bi2bn(y);
+ 
+-		if(!dsa->p || !dsa->q || !dsa->g || !dsa->pub_key)
++		if(!p || !q || !g || !pub)
+ 		{
+ 			DSA_free(dsa);
+ 			return;
+ 		}
+ 
++		DSA_set0_pqg(dsa, p, q, g);
++		DSA_set0_key(dsa, pub, NULL);
++
+ 		evp.pkey = EVP_PKEY_new();
+ 		EVP_PKEY_assign_DSA(evp.pkey, dsa);
+ 		sec = false;
+@@ -2346,17 +2382,26 @@ public:
+ 
+ 	virtual DLGroup domain() const
+ 	{
+-		return DLGroup(bn2bi(evp.pkey->pkey.dsa->p), bn2bi(evp.pkey->pkey.dsa->q), bn2bi(evp.pkey->pkey.dsa->g));
++		DSA *dsa = EVP_PKEY_get0_DSA(evp.pkey);
++		const BIGNUM *p, *q, *g;
++		DSA_get0_pqg(dsa, &p, &q, &g);
++		return DLGroup(bn2bi(p), bn2bi(q), bn2bi(g));
+ 	}
+ 
+ 	virtual BigInteger y() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.dsa->pub_key);
++		DSA *dsa = EVP_PKEY_get0_DSA(evp.pkey);
++		const BIGNUM *pub;
++		DSA_get0_key(dsa, &pub, NULL);
++		return bn2bi(pub);
+ 	}
+ 
+ 	virtual BigInteger x() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.dsa->priv_key);
++		DSA *dsa = EVP_PKEY_get0_DSA(evp.pkey);
++		const BIGNUM *priv;
++		DSA_get0_key(dsa, NULL, &priv);
++		return bn2bi(priv);
+ 	}
+ 
+ private slots:
+@@ -2405,8 +2450,7 @@ public:
+ 	virtual void run()
+ 	{
+ 		DH *dh = DH_new();
+-		dh->p = bi2bn(domain.p());
+-		dh->g = bi2bn(domain.g());
++		DH_set0_pqg(dh, bi2bn(domain.p()), NULL, bi2bn(domain.g()));
+ 		if(!DH_generate_key(dh))
+ 		{
+ 			DH_free(dh);
+@@ -2479,11 +2523,13 @@ public:
+ 		if(!sec)
+ 			return;
+ 
+-		DH *orig = evp.pkey->pkey.dh;
++		DH *orig = EVP_PKEY_get0_DH(evp.pkey);
++		const BIGNUM *p, *g, *pub;
++		DH_get0_pqg(orig, &p, NULL, &g);
++		DH_get0_key(orig, &pub, NULL);
+ 		DH *dh = DH_new();
+-		dh->p = BN_dup(orig->p);
+-		dh->g = BN_dup(orig->g);
+-		dh->pub_key = BN_dup(orig->pub_key);
++		DH_set0_pqg(dh, BN_dup(p), NULL, BN_dup(g));
++		DH_set0_key(dh, BN_dup(pub), NULL);
+ 
+ 		evp.reset();
+ 
+@@ -2499,10 +2545,12 @@ public:
+ 
+ 	virtual SymmetricKey deriveKey(const PKeyBase &theirs)
+ 	{
+-		DH *dh = evp.pkey->pkey.dh;
+-		DH *them = static_cast<const DHKey *>(&theirs)->evp.pkey->pkey.dh;
++		DH *dh = EVP_PKEY_get0_DH(evp.pkey);
++		DH *them = EVP_PKEY_get0_DH(static_cast<const DHKey *>(&theirs)->evp.pkey);
+ 		SecureArray result(DH_size(dh));
+-		int ret = DH_compute_key((unsigned char *)result.data(), them->pub_key, dh);
++		const BIGNUM *pub;
++		DH_get0_key(them, &pub, NULL);
++		int ret = DH_compute_key((unsigned char *)result.data(), pub, dh);
+ 		if(ret <= 0)
+ 			return SymmetricKey();
+ 		result.resize(ret);
+@@ -2532,16 +2580,19 @@ public:
+ 		evp.reset();
+ 
+ 		DH *dh = DH_new();
+-		dh->p = bi2bn(domain.p());
+-		dh->g = bi2bn(domain.g());
+-		dh->pub_key = bi2bn(y);
+-		dh->priv_key = bi2bn(x);
++		BIGNUM *p, *g, *pub, *priv;
++		p = bi2bn(domain.p());
++		g = bi2bn(domain.g());
++		pub = bi2bn(y);
++		priv = bi2bn(x);
+ 
+-		if(!dh->p || !dh->g || !dh->pub_key || !dh->priv_key)
++		if(!p || !g || !pub || !priv)
+ 		{
+ 			DH_free(dh);
+ 			return;
+ 		}
++		DH_set0_pqg(dh, p, NULL, g);
++		DH_set0_key(dh, pub, priv);
+ 
+ 		evp.pkey = EVP_PKEY_new();
+ 		EVP_PKEY_assign_DH(evp.pkey, dh);
+@@ -2553,16 +2604,18 @@ public:
+ 		evp.reset();
+ 
+ 		DH *dh = DH_new();
+-		dh->p = bi2bn(domain.p());
+-		dh->g = bi2bn(domain.g());
+-		dh->pub_key = bi2bn(y);
++		BIGNUM *p = bi2bn(domain.p()), *g = bi2bn(domain.g());
++		BIGNUM *pub = bi2bn(y);
+ 
+-		if(!dh->p || !dh->g || !dh->pub_key)
++		if(!p || !g || !pub)
+ 		{
+ 			DH_free(dh);
+ 			return;
+ 		}
+ 
++		DH_set0_pqg(dh, p, NULL, g);
++		DH_set0_key(dh, pub, NULL);
++
+ 		evp.pkey = EVP_PKEY_new();
+ 		EVP_PKEY_assign_DH(evp.pkey, dh);
+ 		sec = false;
+@@ -2570,17 +2623,26 @@ public:
+ 
+ 	virtual DLGroup domain() const
+ 	{
+-		return DLGroup(bn2bi(evp.pkey->pkey.dh->p), bn2bi(evp.pkey->pkey.dh->g));
++		DH *dh = EVP_PKEY_get0_DH(evp.pkey);
++		const BIGNUM *p, *g;
++		DH_get0_pqg(dh, &p, NULL, &g);
++		return DLGroup(bn2bi(p), bn2bi(g));
+ 	}
+ 
+ 	virtual BigInteger y() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.dh->pub_key);
++		DH *dh = EVP_PKEY_get0_DH(evp.pkey);
++		const BIGNUM *pub;
++		DH_get0_key(dh, &pub, NULL);
++		return bn2bi(pub);
+ 	}
+ 
+ 	virtual BigInteger x() const
+ 	{
+-		return bn2bi(evp.pkey->pkey.dh->priv_key);
++		DH *dh = EVP_PKEY_get0_DH(evp.pkey);
++		const BIGNUM *priv;
++		DH_get0_key(dh, NULL, &priv);
++		return bn2bi(priv);
+ 	}
+ 
+ private slots:
+@@ -2619,10 +2681,8 @@ public:
+ 	{
+ 		key = _key;
+ 		RSA_set_method(rsa, rsa_method());
+-		rsa->flags |= RSA_FLAG_SIGN_VER;
+ 		RSA_set_app_data(rsa, this);
+-		rsa->n = bi2bn(_key.n());
+-		rsa->e = bi2bn(_key.e());
++		RSA_set0_key(rsa, bi2bn(_key.n()), bi2bn(_key.e()), NULL);
+ 	}
+ 
+ 	RSA_METHOD *rsa_method()
+@@ -2631,12 +2691,10 @@ public:
+ 
+ 		if(!ops)
+ 		{
+-			ops = new RSA_METHOD(*RSA_get_default_method());
+-			ops->rsa_priv_enc = 0;//pkcs11_rsa_encrypt;
+-			ops->rsa_priv_dec = rsa_priv_dec;
+-			ops->rsa_sign = rsa_sign;
+-			ops->rsa_verify = 0;//pkcs11_rsa_verify;
+-			ops->finish = rsa_finish;
++			ops = RSA_meth_dup(RSA_get_default_method());
++			RSA_meth_set_priv_dec(ops, rsa_priv_dec);
++			RSA_meth_set_sign(ops, rsa_sign);
++			RSA_meth_set_finish(ops, rsa_finish);
+ 		}
+ 		return ops;
+ 	}
+@@ -2655,7 +2713,7 @@ public:
+ 		}
+ 		else
+ 		{
+-			RSAerr(RSA_F_RSA_EAY_PRIVATE_DECRYPT, RSA_R_UNKNOWN_PADDING_TYPE);
++			RSAerr(RSA_F_RSA_OSSL_PRIVATE_DECRYPT, RSA_R_UNKNOWN_PADDING_TYPE);
+ 			return -1;
+ 		}
+ 
+@@ -2678,6 +2736,7 @@ public:
+ 
+ 	static int rsa_sign(int type, const unsigned char *m, unsigned int m_len, unsigned char *sigret, unsigned int *siglen, const RSA *rsa)
+ 	{
++#if 0 // FIXME OSSL11
+ 		QCA_RSA_METHOD *self = (QCA_RSA_METHOD *)RSA_get_app_data(rsa);
+ 
+ 		// TODO: this is disgusting
+@@ -2694,7 +2753,7 @@ public:
+ 		{
+ 
+ 			// make X509 packet
+-			X509_SIG sig;
++			X509_SIG *sig;
+ 			ASN1_TYPE parameter;
+ 
+ 			X509_ALGOR algor;
+@@ -2703,27 +2762,28 @@ public:
+ 			//int rsa_size = 128;
+ 			//CK_ULONG sigsize = rsa_size;
+ 
+-			sig.algor= &algor;
+-			sig.algor->algorithm=OBJ_nid2obj(type);
+-			if (sig.algor->algorithm == NULL)
++			sig=X509_SIG_new();
++			sig->algor= &algor;
++			sig->algor->algorithm=OBJ_nid2obj(type);
++			if (sig->algor->algorithm == NULL)
+ 			{
+ 				//RSAerr(RSA_F_RSA_SIGN,RSA_R_UNKNOWN_ALGORITHM_TYPE);
+ 				return 0;
+ 			}
+-			if (sig.algor->algorithm->length == 0)
++			if (sig->algor->algorithm->length == 0)
+ 			{
+ 				//RSAerr(RSA_F_RSA_SIGN,RSA_R_THE_ASN1_OBJECT_IDENTIFIER_IS_NOT_KNOWN_FOR_THIS_MD);
+ 				return 0;
+ 			}
+ 			parameter.type=V_ASN1_NULL;
+ 			parameter.value.ptr=NULL;
+-			sig.algor->parameter= &parameter;
++			sig->algor->parameter= &parameter;
+ 
+-			sig.digest= &digest;
+-			sig.digest->data=(unsigned char *)m; /* TMP UGLY CAST */
+-			sig.digest->length=m_len;
++			sig->digest= &digest;
++			sig->digest->data=(unsigned char *)m; /* TMP UGLY CAST */
++			sig->digest->length=m_len;
+ 
+-			i=i2d_X509_SIG(&sig,NULL);
++			i=i2d_X509_SIG(sig,NULL);
+ 
+ 			j=rsa_size;
+ 			if (i > (j-RSA_PKCS1_PADDING_SIZE))
+@@ -2739,10 +2799,11 @@ public:
+ 				return 0;
+ 			}
+ 			p=tmps;
+-			i2d_X509_SIG(&sig,&p);
++			i2d_X509_SIG(sig,&p);
+ 			s=tmps;
+ 			m = s;
+ 			m_len = i;
++			X509_SIG_free(sig);
+ 		}
+ 
+ 		SecureArray input;
+@@ -2765,6 +2826,7 @@ public:
+ 		*siglen = result.size();
+ 
+ 		return 1;
++#endif
+ 	}
+ 
+ 	static int rsa_finish(RSA *rsa)
+@@ -2867,21 +2929,21 @@ public:
+ 	PKeyBase *pkeyToBase(EVP_PKEY *pkey, bool sec) const
+ 	{
+ 		PKeyBase *nk = 0;
+-		if(pkey->type == EVP_PKEY_RSA)
++		if(EVP_PKEY_id(pkey) == EVP_PKEY_RSA)
+ 		{
+ 			RSAKey *c = new RSAKey(provider());
+ 			c->evp.pkey = pkey;
+ 			c->sec = sec;
+ 			nk = c;
+ 		}
+-		else if(pkey->type == EVP_PKEY_DSA)
++		else if(EVP_PKEY_id(pkey) == EVP_PKEY_DSA)
+ 		{
+ 			DSAKey *c = new DSAKey(provider());
+ 			c->evp.pkey = pkey;
+ 			c->sec = sec;
+ 			nk = c;
+ 		}
+-		else if(pkey->type == EVP_PKEY_DH)
++		else if(EVP_PKEY_id(pkey) == EVP_PKEY_DH)
+ 		{
+ 			DHKey *c = new DHKey(provider());
+ 			c->evp.pkey = pkey;
+@@ -2900,7 +2962,7 @@ public:
+ 		EVP_PKEY *pkey = get_pkey();
+ 
+ 		// OpenSSL does not have DH import/export support
+-		if(pkey->type == EVP_PKEY_DH)
++		if(EVP_PKEY_id(pkey) == EVP_PKEY_DH)
+ 			return QByteArray();
+ 
+ 		BIO *bo = BIO_new(BIO_s_mem());
+@@ -2914,7 +2976,7 @@ public:
+ 		EVP_PKEY *pkey = get_pkey();
+ 
+ 		// OpenSSL does not have DH import/export support
+-		if(pkey->type == EVP_PKEY_DH)
++		if(EVP_PKEY_id(pkey) == EVP_PKEY_DH)
+ 			return QString();
+ 
+ 		BIO *bo = BIO_new(BIO_s_mem());
+@@ -2981,7 +3043,7 @@ public:
+ 		EVP_PKEY *pkey = get_pkey();
+ 
+ 		// OpenSSL does not have DH import/export support
+-		if(pkey->type == EVP_PKEY_DH)
++		if(EVP_PKEY_id(pkey) == EVP_PKEY_DH)
+ 			return SecureArray();
+ 
+ 		BIO *bo = BIO_new(BIO_s_mem());
+@@ -3010,7 +3072,7 @@ public:
+ 		EVP_PKEY *pkey = get_pkey();
+ 
+ 		// OpenSSL does not have DH import/export support
+-		if(pkey->type == EVP_PKEY_DH)
++		if(EVP_PKEY_id(pkey) == EVP_PKEY_DH)
+ 			return QString();
+ 
+ 		BIO *bo = BIO_new(BIO_s_mem());
+@@ -3111,11 +3173,11 @@ public:
+ 			crl = from.crl;
+ 
+ 			if(cert)
+-				CRYPTO_add(&cert->references, 1, CRYPTO_LOCK_X509);
++				X509_up_ref(cert);
+ 			if(req)
+-				CRYPTO_add(&req->references, 1, CRYPTO_LOCK_X509_REQ);
++				X509_REQ_up_ref(req);
+ 			if(crl)
+-				CRYPTO_add(&crl->references, 1, CRYPTO_LOCK_X509_CRL);
++				X509_CRL_up_ref(crl);
+ 		}
+ 
+ 		return *this;
+@@ -3319,7 +3381,7 @@ public:
+ 
+ 	void fromX509(X509 *x)
+ 	{
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++		X509_up_ref(x);
+ 		item.cert = x;
+ 		make_props();
+ 	}
+@@ -3350,7 +3412,7 @@ public:
+ 		if(priv.key()->type() == PKey::RSA)
+ 			md = EVP_sha1();
+ 		else if(priv.key()->type() == PKey::DSA)
+-			md = EVP_dss1();
++			md = EVP_sha1();
+ 		else
+ 			return false;
+ 
+@@ -3481,7 +3543,7 @@ public:
+ 
+ 		const MyCertContext *our_cc = this;
+ 		X509 *x = our_cc->item.cert;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++		X509_up_ref(x);
+ 		sk_X509_push(untrusted_list, x);
+ 
+ 		const MyCertContext *other_cc = static_cast<const MyCertContext *>(other);
+@@ -3752,7 +3814,7 @@ public:
+ 		if(privateKey -> key()->type() == PKey::RSA)
+ 			md = EVP_sha1();
+ 		else if(privateKey -> key()->type() == PKey::DSA)
+-			md = EVP_dss1();
++			md = EVP_sha1();
+ 		else
+ 			return 0;
+ 
+@@ -3935,7 +3997,7 @@ public:
+ 		if(priv.key()->type() == PKey::RSA)
+ 			md = EVP_sha1();
+ 		else if(priv.key()->type() == PKey::DSA)
+-			md = EVP_dss1();
++			md = EVP_sha1();
+ 		else
+ 			return false;
+ 
+@@ -4187,7 +4249,7 @@ public:
+ 
+ 	void fromX509(X509_CRL *x)
+ 	{
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
++		X509_CRL_up_ref(x);
+ 		item.crl = x;
+ 		make_props();
+ 	}
+@@ -4488,21 +4550,21 @@ Validity MyCertContext::validate(const Q
+ 	{
+ 		const MyCertContext *cc = static_cast<const MyCertContext *>(trusted[n]);
+ 		X509 *x = cc->item.cert;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++		X509_up_ref(x);
+ 		sk_X509_push(trusted_list, x);
+ 	}
+ 	for(n = 0; n < untrusted.count(); ++n)
+ 	{
+ 		const MyCertContext *cc = static_cast<const MyCertContext *>(untrusted[n]);
+ 		X509 *x = cc->item.cert;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++		X509_up_ref(x);
+ 		sk_X509_push(untrusted_list, x);
+ 	}
+ 	for(n = 0; n < crls.count(); ++n)
+ 	{
+ 		const MyCRLContext *cc = static_cast<const MyCRLContext *>(crls[n]);
+ 		X509_CRL *x = cc->item.crl;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
++		X509_CRL_up_ref(x);
+ 		crl_list.append(x);
+ 	}
+ 
+@@ -4561,21 +4623,21 @@ Validity MyCertContext::validate_chain(c
+ 	{
+ 		const MyCertContext *cc = static_cast<const MyCertContext *>(trusted[n]);
+ 		X509 *x = cc->item.cert;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++		X509_up_ref(x);
+ 		sk_X509_push(trusted_list, x);
+ 	}
+ 	for(n = 1; n < chain.count(); ++n)
+ 	{
+ 		const MyCertContext *cc = static_cast<const MyCertContext *>(chain[n]);
+ 		X509 *x = cc->item.cert;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++		X509_up_ref(x);
+ 		sk_X509_push(untrusted_list, x);
+ 	}
+ 	for(n = 0; n < crls.count(); ++n)
+ 	{
+ 		const MyCRLContext *cc = static_cast<const MyCRLContext *>(crls[n]);
+ 		X509_CRL *x = cc->item.crl;
+-		CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
++		X509_CRL_up_ref(x);
+ 		crl_list.append(x);
+ 	}
+ 
+@@ -4664,7 +4726,7 @@ public:
+ 			for(int n = 1; n < chain.count(); ++n)
+ 			{
+ 				X509 *x = static_cast<const MyCertContext *>(chain[n])->item.cert;
+-				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++				X509_up_ref(x);
+ 				sk_X509_push(ca, x);
+ 			}
+ 		}
+@@ -5884,14 +5946,14 @@ public:
+ 			{
+ 				const MyCertContext *cc = static_cast<const MyCertContext *>(cert_list[n].context());
+ 				X509 *x = cc->item.cert;
+-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++				//X509_up_ref(x);
+ 				X509_STORE_add_cert(store, x);
+ 			}
+ 			for(n = 0; n < crl_list.count(); ++n)
+ 			{
+ 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
+ 				X509_CRL *x = cc->item.crl;
+-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
++				//X509_CRL_up_ref(x);
+ 				X509_STORE_add_crl(store, x);
+ 			}
+ 		}
+@@ -6394,7 +6456,7 @@ public:
+ 			for(int n = 0; n < nonroots.count(); ++n)
+ 			{
+ 				X509 *x = static_cast<MyCertContext *>(nonroots[n].context())->item.cert;
+-				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++				X509_up_ref(x);
+ 				sk_X509_push(other_certs, x);
+ 			}
+ 
+@@ -6436,7 +6498,7 @@ public:
+ 
+ 			other_certs = sk_X509_new_null();
+ 			X509 *x = static_cast<MyCertContext *>(target.context())->item.cert;
+-			CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++			X509_up_ref(x);
+ 			sk_X509_push(other_certs, x);
+ 
+ 			bi = BIO_new(BIO_s_mem());
+@@ -6499,7 +6561,7 @@ public:
+ 			for(int n = 0; n < untrusted_list.count(); ++n)
+ 			{
+ 				X509 *x = static_cast<MyCertContext *>(untrusted_list[n].context())->item.cert;
+-				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++				X509_up_ref(x);
+ 				sk_X509_push(other_certs, x);
+ 			}
+ 
+@@ -6561,14 +6623,14 @@ public:
+ 				//printf("trusted: [%s]\n", qPrintable(cert_list[n].commonName()));
+ 				const MyCertContext *cc = static_cast<const MyCertContext *>(cert_list[n].context());
+ 				X509 *x = cc->item.cert;
+-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
++				//X509_up_ref(x);
+ 				X509_STORE_add_cert(store, x);
+ 			}
+ 			for(int n = 0; n < crl_list.count(); ++n)
+ 			{
+ 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
+ 				X509_CRL *x = cc->item.crl;
+-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
++				//X509_CRL_up_ref(x);
+ 				X509_STORE_add_crl(store, x);
+ 			}
+ 			// add these crls also
+@@ -6577,7 +6639,7 @@ public:
+ 			{
+ 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
+ 				X509_CRL *x = cc->item.crl;
+-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
++				//X509_CRL_up_ref(x);
+ 				X509_STORE_add_crl(store, x);
+ 			}
+ 
+@@ -6750,14 +6812,16 @@ public:
+ 	opensslCipherContext(const EVP_CIPHER *algorithm, const int pad, Provider *p, const QString &type) : CipherContext(p, type)
+ 	{
+ 		m_cryptoAlgorithm = algorithm;
+-		EVP_CIPHER_CTX_init(&m_context);
++		m_context = EVP_CIPHER_CTX_new();
++		EVP_CIPHER_CTX_init(m_context);
+ 		m_pad = pad;
+ 		m_type = type;
+ 	}
+ 
+ 	~opensslCipherContext()
+ 	{
+-		EVP_CIPHER_CTX_cleanup(&m_context);
++		EVP_CIPHER_CTX_cleanup(m_context);
++		EVP_CIPHER_CTX_free(m_context);
+ 	}
+ 
+ 	void setup(Direction dir,
+@@ -6772,28 +6836,28 @@ public:
+ 			m_cryptoAlgorithm = EVP_des_ede();
+ 		}
+ 		if (Encode == m_direction) {
+-			EVP_EncryptInit_ex(&m_context, m_cryptoAlgorithm, 0, 0, 0);
+-			EVP_CIPHER_CTX_set_key_length(&m_context, key.size());
++			EVP_EncryptInit_ex(m_context, m_cryptoAlgorithm, 0, 0, 0);
++			EVP_CIPHER_CTX_set_key_length(m_context, key.size());
+ 			if (m_type.endsWith("gcm") || m_type.endsWith("ccm")) {
+ 				int parameter = m_type.endsWith("gcm") ? EVP_CTRL_GCM_SET_IVLEN : EVP_CTRL_CCM_SET_IVLEN;
+-				EVP_CIPHER_CTX_ctrl(&m_context, parameter, iv.size(), NULL);
++				EVP_CIPHER_CTX_ctrl(m_context, parameter, iv.size(), NULL);
+ 			}
+-			EVP_EncryptInit_ex(&m_context, 0, 0,
++			EVP_EncryptInit_ex(m_context, 0, 0,
+ 							   (const unsigned char*)(key.data()),
+ 							   (const unsigned char*)(iv.data()));
+ 		} else {
+-			EVP_DecryptInit_ex(&m_context, m_cryptoAlgorithm, 0, 0, 0);
+-			EVP_CIPHER_CTX_set_key_length(&m_context, key.size());
++			EVP_DecryptInit_ex(m_context, m_cryptoAlgorithm, 0, 0, 0);
++			EVP_CIPHER_CTX_set_key_length(m_context, key.size());
+ 			if (m_type.endsWith("gcm") || m_type.endsWith("ccm")) {
+ 				int parameter = m_type.endsWith("gcm") ? EVP_CTRL_GCM_SET_IVLEN : EVP_CTRL_CCM_SET_IVLEN;
+-				EVP_CIPHER_CTX_ctrl(&m_context, parameter, iv.size(), NULL);
++				EVP_CIPHER_CTX_ctrl(m_context, parameter, iv.size(), NULL);
+ 			}
+-			EVP_DecryptInit_ex(&m_context, 0, 0,
++			EVP_DecryptInit_ex(m_context, 0, 0,
+ 							   (const unsigned char*)(key.data()),
+ 							   (const unsigned char*)(iv.data()));
+ 		}
+ 
+-		EVP_CIPHER_CTX_set_padding(&m_context, m_pad);
++		EVP_CIPHER_CTX_set_padding(m_context, m_pad);
+ 	}
+ 
+ 	Provider::Context *clone() const
+@@ -6803,7 +6867,7 @@ public:
+ 
+ 	int blockSize() const
+ 	{
+-		return EVP_CIPHER_CTX_block_size(&m_context);
++		return EVP_CIPHER_CTX_block_size(m_context);
+ 	}
+ 
+     AuthTag tag() const
+@@ -6821,7 +6885,7 @@ public:
+ 		out->resize(in.size()+blockSize());
+ 		int resultLength;
+ 		if (Encode == m_direction) {
+-			if (0 == EVP_EncryptUpdate(&m_context,
++			if (0 == EVP_EncryptUpdate(m_context,
+ 									   (unsigned char*)out->data(),
+ 									   &resultLength,
+ 									   (unsigned char*)in.data(),
+@@ -6829,7 +6893,7 @@ public:
+ 				return false;
+ 			}
+ 		} else {
+-			if (0 == EVP_DecryptUpdate(&m_context,
++			if (0 == EVP_DecryptUpdate(m_context,
+ 									   (unsigned char*)out->data(),
+ 									   &resultLength,
+ 									   (unsigned char*)in.data(),
+@@ -6846,25 +6910,25 @@ public:
+ 		out->resize(blockSize());
+ 		int resultLength;
+ 		if (Encode == m_direction) {
+-			if (0 == EVP_EncryptFinal_ex(&m_context,
++			if (0 == EVP_EncryptFinal_ex(m_context,
+ 										 (unsigned char*)out->data(),
+ 										 &resultLength)) {
+ 				return false;
+ 			}
+ 			if (m_tag.size() && (m_type.endsWith("gcm") || m_type.endsWith("ccm"))) {
+ 				int parameter = m_type.endsWith("gcm") ? EVP_CTRL_GCM_GET_TAG : EVP_CTRL_CCM_GET_TAG;
+-				if (0 == EVP_CIPHER_CTX_ctrl(&m_context, parameter, m_tag.size(), (unsigned char*)m_tag.data())) {
++				if (0 == EVP_CIPHER_CTX_ctrl(m_context, parameter, m_tag.size(), (unsigned char*)m_tag.data())) {
+ 					return false;
+ 				}
+ 			}
+ 		} else {
+ 			if (m_tag.size() && (m_type.endsWith("gcm") || m_type.endsWith("ccm"))) {
+ 				int parameter = m_type.endsWith("gcm") ? EVP_CTRL_GCM_SET_TAG : EVP_CTRL_CCM_SET_TAG;
+-				if (0 == EVP_CIPHER_CTX_ctrl(&m_context, parameter, m_tag.size(), m_tag.data())) {
++				if (0 == EVP_CIPHER_CTX_ctrl(m_context, parameter, m_tag.size(), m_tag.data())) {
+ 					return false;
+ 				}
+ 			}
+-			if (0 == EVP_DecryptFinal_ex(&m_context,
++			if (0 == EVP_DecryptFinal_ex(m_context,
+ 										 (unsigned char*)out->data(),
+ 										 &resultLength)) {
+ 				return false;
+@@ -6899,7 +6963,7 @@ public:
+ 
+ 
+ protected:
+-	EVP_CIPHER_CTX m_context;
++	EVP_CIPHER_CTX *m_context;
+ 	const EVP_CIPHER *m_cryptoAlgorithm;
+ 	Direction m_direction;
+ 	int m_pad;
