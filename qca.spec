@@ -12,7 +12,12 @@
 %define git %nil
 %bcond_without qt5
 %bcond_with botan
+
+%if %mdvver > 3000000
 %bcond_with openssl
+%else
+%bcond_without openssl
+%endif
 
 Name: qca
 Version: 2.1.3
