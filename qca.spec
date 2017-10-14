@@ -11,7 +11,7 @@
 
 %define git %nil
 %bcond_without qt5
-%bcond_with botan
+%bcond_without botan
 
 %if %mdvver > 3000000
 %bcond_with openssl
@@ -26,7 +26,7 @@ Release: 0.%git.1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 1
+Release: 2
 Source0: http://download.kde.org/stable/%{name}/%{version}/src/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
@@ -465,7 +465,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-botan
 Summary:        Botan plugin for QCA
 Group:          Development/KDE and Qt
-BuildRequires:  botan-devel
+BuildRequires:  pkgconfig(botan-2)
 
 %description -n %{lib_name}-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
