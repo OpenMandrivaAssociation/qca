@@ -11,7 +11,7 @@
 
 %define git %nil
 %bcond_without qt5
-%bcond_without botan
+%bcond_with botan
 
 %if %mdvver > 3000000
 %bcond_with openssl
@@ -479,7 +479,7 @@ use the Botan cryptography library as its backend.
 %package -n %{lib_name}-qt4-plugin-botan
 Summary:        Botan plugin for QCA
 Group:          Development/KDE and Qt
-BuildRequires:  botan-devel
+BuildRequires:  pkgconfig(botan-2)
 
 %description -n %{lib_name}-qt4-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
@@ -497,10 +497,6 @@ use the Botan cryptography library as its backend.
 %setup -q -n %{name}-%{source_ver}
 %endif
 %apply_patches
-
-sed -i 's!botan-config botan-config-1.10!botan!g' ./cmake/modules/FindBotan.cmake
-sed -i 's!--libs!config libs!g' ./cmake/modules/FindBotan.cmake
-sed -i 's!--cflags!config cflags!g' ./cmake/modules/FindBotan.cmake
 
 %build
 CXXFLAGS="%{optflags}"
