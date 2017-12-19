@@ -13,20 +13,16 @@
 %bcond_without qt5
 %bcond_with botan
 
-%if %mdvver > 3000000
-%bcond_with openssl
-%else
 %bcond_without openssl
-%endif
 
 Name: qca
-Version: 2.1.3
+Version: 2.1.4
 %if 0%git
 Release: 0.%git.1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 2
+Release: 1
 Source0: http://download.kde.org/stable/%{name}/%{version}/src/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
@@ -36,6 +32,8 @@ Group: System/Libraries
 URL: http://delta.affinix.com/qca
 # Fix underlinking in the openssl plugin - AdamW 2008/12
 Patch2: qca-2.0.1-underlink.patch
+# https://phabricator.kde.org/D9416
+Patch3: https://phabricator.kde.org/file/data/7xqpqybltnfdn6auoail/PHID-FILE-6dsn37b6nuk5paa2phso/D9416.diff
 
 BuildRequires: qt4-devel >= 2:4.2
 %if %{with qt5}
