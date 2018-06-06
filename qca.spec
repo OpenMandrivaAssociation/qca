@@ -48,7 +48,7 @@ BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: rootcerts
 %endif
 BuildRequires: cmake
-BuildRequires: pkgconfig(libgcrypt)
+BuildRequires: pkgconfig(libgcrypt) pkgconfig(gpg-error)
 BuildRequires: sasl-devel
 BuildRequires: pkgconfig(nss)
 Obsoletes: qca2 < 2.0.1-3
