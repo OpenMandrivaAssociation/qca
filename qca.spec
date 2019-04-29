@@ -17,7 +17,7 @@
 %bcond_without openssl
 
 Name: qca
-Version: 2.2.0
+Version: 2.2.1
 %if 0%git
 Release: 0.%git.1
 # From git export git://anongit.kde.org/qca.git
@@ -44,7 +44,8 @@ BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: rootcerts
 %endif
 BuildRequires: cmake
-BuildRequires: pkgconfig(libgcrypt) pkgconfig(gpg-error)
+BuildRequires: pkgconfig(libgcrypt)
+BuildRequires: pkgconfig(gpg-error)
 BuildRequires: sasl-devel
 BuildRequires: pkgconfig(nss)
 Obsoletes: qca2 < 2.0.1-3
@@ -512,11 +513,10 @@ use the Botan cryptography library as its backend.
 
 %prep
 %if 0%git
-%setup -q -n %{name}-%{version}-%{git}
+%autosetup -n %{name}-%{version}-%{git} -p1
 %else
-%setup -q -n %{name}-%{source_ver}
+%autosetup -n %{name}-%{source_ver} -p1
 %endif
-%apply_patches
 
 %build
 %if %{with qt4}
@@ -534,7 +534,8 @@ CXXFLAGS="%{optflags}"
 	-DWITH_ossl_PLUGIN:BOOL=OFF \
 %endif
 	-DQCA_FEATURE_INSTALL_DIR=%{qt4dir}/mkspecs/features
-%make
+
+%make_build
 cd ..
 %endif
 
@@ -554,7 +555,8 @@ cmake .. \
 	-DWITH_ossl_PLUGIN:BOOL=OFF \
 %endif
 	-DQCA_SUFFIX=qt5
-%make
+
+%make_build
 %endif
 
 %install
