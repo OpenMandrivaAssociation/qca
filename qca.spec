@@ -21,11 +21,11 @@
 Name: qca
 Version:	2.3.0
 %if 0%git
-Release:	2
+Release:	1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release:	1
+Release:	2
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
