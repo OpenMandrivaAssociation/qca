@@ -9,6 +9,8 @@
 %define develname %mklibname %{name} -d
 %define source_ver %{version}
 
+%global optflags %{optflags} -O3
+
 %define git %nil
 %bcond_with qt4
 %bcond_without qt5
@@ -19,7 +21,7 @@
 Name: qca
 Version:	2.3.0
 %if 0%git
-Release:	1
+Release:	2
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
