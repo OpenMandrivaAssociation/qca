@@ -1,5 +1,6 @@
 %define build_debug 0
 %{?_with_debug: %{expand: %%global build_debug 1}}
+%global debug_package %{nil}
 
 %define build_sys_rootcerts 1
 %{?_without_sys_rootcerts: %{expand: %%global build_sys_rootcerts 0}}
@@ -14,18 +15,18 @@
 %define git %nil
 %bcond_with qt4
 %bcond_without qt5
-%bcond_with botan
+%bcond_without botan
 
 %bcond_without openssl
 
 Name: qca
-Version:	2.3.0
+Version:	2.3.1
 %if 0%git
 Release:	1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release:	2
+Release:	1
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
@@ -39,7 +40,9 @@ BuildRequires: qt4-devel >= 2:4.2
 Requires: qt4-common >= 4.3
 %endif
 %if %{with qt5}
-BuildRequires: qt5-devel
+BuildRequires: pkgconfig(Qt5Core)
+BuildRequires: pkgconfig(Qt5Gui)
+BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(Qt5Test)
 %endif
 %if %{build_sys_rootcerts}
@@ -241,7 +244,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-openssl
 Summary: OpenSSL plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: openssl-devel
+BuildRequires: pkgconfig(openssl)
 Provides: qca-plugin-openssl-%{_lib} = %{EVRD}
 
 %description -n %{lib_name}-plugin-openssl
@@ -258,7 +261,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-qt4-plugin-openssl
 Summary: OpenSSL plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: openssl-devel
+BuildRequires: pkgconfig(openssl)
 Provides: qca2-openssl = %{version}
 Provides: qca2-tls = %{version}
 Provides: qca2-plugin-openssl-%{_lib} = %{EVRD}
@@ -280,7 +283,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-pkcs11
 Summary: PKCS11 plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: openssl-devel
+BuildRequires: pkgconfig(openssl)
 BuildRequires: pkcs11-helper-devel
 Provides: qca-plugin-pkcs11-%{_lib} = %{EVRD}
 
@@ -297,7 +300,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-qt4-plugin-pkcs11
 Summary: PKCS11 plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: openssl-devel
+BuildRequires: pkgconfig(openssl)
 BuildRequires: pkcs11-helper-devel
 Provides: qca2-pkcs11 = %{version}
 Provides: qca2-plugin-pkcs11-%{_lib} = %{EVRD}
