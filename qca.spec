@@ -44,6 +44,7 @@ BuildRequires: pkgconfig(Qt5Core)
 BuildRequires: pkgconfig(Qt5Gui)
 BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(Qt5Test)
+BuildRequires: qmake5
 %endif
 %if %{build_sys_rootcerts}
 BuildRequires: rootcerts
