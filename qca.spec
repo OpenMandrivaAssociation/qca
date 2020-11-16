@@ -30,6 +30,7 @@ Release:	1
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 Source100: %{name}.rpmlintrc
+Patch0:	qca-2.3.1-openssl-3.0.patch
 License: LGPLv2+
 Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
