@@ -1,25 +1,16 @@
-diff -up qca-2.3.1/plugins/make.omv~ qca-2.3.1/plugins/make
-diff -up qca-2.3.1/plugins/qca-ossl/qca-ossl.cpp.omv~ qca-2.3.1/plugins/qca-ossl/qca-ossl.cpp
---- qca-2.3.1/plugins/qca-ossl/qca-ossl.cpp.omv~	2020-11-16 14:32:27.062410795 +0100
-+++ qca-2.3.1/plugins/qca-ossl/qca-ossl.cpp	2020-11-16 14:40:52.861195430 +0100
-@@ -29,6 +29,7 @@
- 
- #include <openssl/evp.h>
- #include <openssl/hmac.h>
-+#include <openssl/kdf.h>
- 
- #include <cstdio>
- #include <cstdlib>
-@@ -1282,9 +1283,9 @@ public:
- 		EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
- 		EVP_PKEY_derive_init(pctx);
- 		EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256());
--		EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt.data(), int(salt.size()));
--		EVP_PKEY_CTX_set1_hkdf_key(pctx, secret.data(), int(secret.size()));
--		EVP_PKEY_CTX_add1_hkdf_info(pctx, info.data(), int(info.size()));
-+		EVP_PKEY_CTX_set1_hkdf_salt(pctx, reinterpret_cast<const unsigned char*>(salt.data()), int(salt.size()));
-+		EVP_PKEY_CTX_set1_hkdf_key(pctx, reinterpret_cast<const unsigned char*>(secret.data()), int(secret.size()));
-+		EVP_PKEY_CTX_add1_hkdf_info(pctx, reinterpret_cast<const unsigned char*>(info.data()), int(info.size()));
- 		size_t outlen = out.size();
- 		EVP_PKEY_derive(pctx, reinterpret_cast<unsigned char*>(out.data()), &outlen);
- 		EVP_PKEY_CTX_free(pctx);
+diff -Naur a/plugins/qca-ossl/qca-ossl.cpp b/plugins/qca-ossl/qca-ossl.cpp
+--- a/plugins/qca-ossl/qca-ossl.cpp	2021-02-04 10:29:44.000000000 +0000
++++ b/plugins/qca-ossl/qca-ossl.cpp	2021-02-16 13:04:06.444000000 +0000
+@@ -1262,9 +1262,9 @@
+         EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+         EVP_PKEY_derive_init(pctx);
+         EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256());
+-        EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt.data(), int(salt.size()));
+-        EVP_PKEY_CTX_set1_hkdf_key(pctx, secret.data(), int(secret.size()));
+-        EVP_PKEY_CTX_add1_hkdf_info(pctx, info.data(), int(info.size()));
++        EVP_PKEY_CTX_set1_hkdf_salt(pctx, reinterpret_cast<const unsigned char*>(salt.data()), int(salt.size()));
++        EVP_PKEY_CTX_set1_hkdf_key(pctx, reinterpret_cast<const unsigned char*>(secret.data()), int(secret.size()));
++        EVP_PKEY_CTX_add1_hkdf_info(pctx, reinterpret_cast<const unsigned char*>(info.data()), int(info.size()));
+         size_t outlen = out.size();
+         EVP_PKEY_derive(pctx, reinterpret_cast<unsigned char *>(out.data()), &outlen);
+         EVP_PKEY_CTX_free(pctx);
