@@ -265,4 +265,4 @@ use the Botan cryptography library as its backend.
 %make_build
 
 %install
-make DESTDIR=%{buildroot} install
+%make_install DESTDIR=%{buildroot} -C build
