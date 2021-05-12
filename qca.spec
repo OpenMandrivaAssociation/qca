@@ -3,7 +3,6 @@
 %define lib_major 2
 %define lib_name %mklibname %{name} %{lib_major}
 %define develname %mklibname %{name} -d
-%define source_ver %{version}
 
 %global optflags %{optflags} -O3
 
@@ -243,7 +242,7 @@ use the Botan cryptography library as its backend.
 %if 0%git
 %autosetup -n %{name}-%{version}-%{git} -p1
 %else
-%autosetup -n %{name}-%{source_ver} -p1
+%autosetup -p1
 %endif
 
 %build
