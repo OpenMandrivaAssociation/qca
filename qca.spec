@@ -23,7 +23,8 @@ Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
 URL: http://userbase.kde.org/QCA
 Source100: %{name}.rpmlintrc
-Patch0: qca-2.3.2-openssl-3.0.patch
+# OpenSSL 3 support
+Patch0: https://invent.kde.org/libraries/qca/-/merge_requests/58.patch
 BuildRequires: pkgconfig(Qt5Core)
 BuildRequires: pkgconfig(Qt5Gui)
 BuildRequires: pkgconfig(Qt5Widgets)
