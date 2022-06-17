@@ -9,7 +9,7 @@
 %bcond_without openssl
 
 Name: qca
-Version: 2.3.3
+Version: 2.3.4
 %if 0%git
 Release: 0.%{git}.1
 # From git export git://anongit.kde.org/qca.git
@@ -23,8 +23,6 @@ Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
 URL: http://userbase.kde.org/QCA
 Source100: %{name}.rpmlintrc
-# OpenSSL 3 support
-Patch0: https://invent.kde.org/libraries/qca/-/merge_requests/58.patch
 BuildRequires: pkgconfig(Qt5Core)
 BuildRequires: pkgconfig(Qt5Gui)
 BuildRequires: pkgconfig(Qt5Widgets)
@@ -55,7 +53,7 @@ regulation.
 %files
 %{_bindir}/mozcerts-qt5
 %{_bindir}/qcatool-qt5
-%_mandir/man1/qcatool-qt5.*
+%doc %{_mandir}/man1/qcatool-qt5.*
 
 #------------------------------------------------------------------------------
 
