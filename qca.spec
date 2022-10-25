@@ -2,6 +2,8 @@
 %define lib_name %mklibname %{name} %{lib_major}
 %define develname %mklibname %{name} -d
 
+%define __requires_exclude .*qt5core5compat.*
+
 %global optflags %{optflags} -O3
 
 %define git %nil
