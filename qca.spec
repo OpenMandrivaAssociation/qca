@@ -35,12 +35,15 @@ BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(Qt5Test)
 BuildRequires: pkgconfig(Qt5Network)
 BuildRequires: qmake5
+BuildRequires: cmake(Qt6)
 BuildRequires: cmake(Qt6Core)
 BuildRequires: cmake(Qt6Gui)
 BuildRequires: cmake(Qt6Widgets)
 BuildRequires: cmake(Qt6Test)
 BuildRequires: cmake(Qt6Network)
 BuildRequires: qmake-qt6
+BuildRequires: qt6-cmake
+BuildRequires: doxygen
 BuildRequires: rootcerts
 BuildRequires: cmake
 BuildRequires: pkgconfig(libgcrypt)
