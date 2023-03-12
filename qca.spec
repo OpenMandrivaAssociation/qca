@@ -41,6 +41,7 @@ BuildRequires: cmake(Qt6Gui)
 BuildRequires: cmake(Qt6Widgets)
 BuildRequires: cmake(Qt6Test)
 BuildRequires: cmake(Qt6Network)
+BuildRequires: cmake(Qt6Core5Compat)
 BuildRequires: qmake-qt6
 BuildRequires: qt6-cmake
 BuildRequires: doxygen
