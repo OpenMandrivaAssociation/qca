@@ -21,7 +21,7 @@ Release: 0.%{git}.1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 3
+Release: 4
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 License: LGPLv2+
@@ -166,6 +166,7 @@ Group: Development/KDE and Qt
 BuildRequires: pkgconfig(openssl)
 Provides: qca-plugin-openssl-%{_lib} = %{EVRD}
 Obsoletes: %{oldlib_name}-plugin-openssl < %{EVRD}
+Provides: %{oldlib_name}-plugin-openssl = %{EVRD}
 
 %description -n %{lib_name}-plugin-openssl
 This is a plugin to provide OpenSSL capability to programs that
@@ -229,6 +230,7 @@ Summary: GCrypt plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca-plugin-gcrypt-%{_lib} = %{EVRD}
 Obsoletes: %{oldlib_name}-plugin-gcrypt < %{EVRD}
+Provides: %{oldlib_name}-plugin-gcrypt = %{EVRD}
 
 %description -n %{lib_name}-plugin-gcrypt
 This is a plugin to provide gcrypt capability to programs that
