@@ -21,7 +21,7 @@ Release: 0.%{git}.1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 2
+Release: 3
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 License: LGPLv2+
@@ -148,6 +148,7 @@ Summary: GnuPG plugin for QCA
 Group: Development/KDE and Qt
 Requires: gnupg
 Provides: qca-plugin-gnupg-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-gnupg < %{EVRD}
 
 %description -n %{lib_name}-plugin-gnupg
 This is a plugin to provide GnuPG capability to programs that
@@ -164,6 +165,7 @@ Summary: OpenSSL plugin for QCA
 Group: Development/KDE and Qt
 BuildRequires: pkgconfig(openssl)
 Provides: qca-plugin-openssl-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-openssl < %{EVRD}
 
 %description -n %{lib_name}-plugin-openssl
 This is a plugin to provide OpenSSL capability to programs that
@@ -181,6 +183,7 @@ Group: Development/KDE and Qt
 BuildRequires: pkgconfig(openssl)
 BuildRequires: pkcs11-helper-devel
 Provides: qca-plugin-pkcs11-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-pkcs11 < %{EVRD}
 
 %description -n %{lib_name}-plugin-pkcs11
 This is a plugin to provide PKCS11 capability to programs that
@@ -195,6 +198,7 @@ Summary: Cyrus-sasl plugin for QCA
 Group: Development/KDE and Qt
 BuildRequires: sasl-devel
 Provides: qca-plugin-cyrus-sasl-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-cyrus-sasl < %{EVRD}
 
 %description -n %{lib_name}-plugin-cyrus-sasl
 This is a plugin to provide cyrus-sasl capability to programs that
@@ -209,6 +213,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca-plugin-logger-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-logger < %{EVRD}
 
 %description -n %{lib_name}-plugin-logger
 This is a plugin to provide logger capability to programs that
@@ -223,6 +228,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: GCrypt plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca-plugin-gcrypt-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-gcrypt < %{EVRD}
 
 %description -n %{lib_name}-plugin-gcrypt
 This is a plugin to provide gcrypt capability to programs that
@@ -237,6 +243,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 Summary: NSS plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca-plugin-nss-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-nss < %{EVRD}
 
 %description -n %{lib_name}-plugin-nss
 This is a plugin to provide nss capability to programs that
@@ -245,12 +252,13 @@ utilize the Qt Cryptographic Architecture (QCA).
 %files -n %{lib_name}-plugin-nss
 %attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-nss.*
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 %package -n %{lib_name}-plugin-softstore
 Summary: Logger plugin for QCA
 Group: Development/KDE and Qt
 Provides: qca-plugin-softstore-%{_lib} = %{EVRD}
+Obsoletes: %{oldlib_name}-plugin-softstore < %{EVRD}
 
 %description -n %{lib_name}-plugin-softstore
 This is a plugin to provide softstore capability to programs that
@@ -263,9 +271,10 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %if %{with botan}
 %package -n %{lib_name}-plugin-botan
-Summary:        Botan plugin for QCA
-Group:          Development/KDE and Qt
-BuildRequires:  pkgconfig(botan-2)
+Summary: Botan plugin for QCA
+Group: Development/KDE and Qt
+BuildRequires: pkgconfig(botan-2)
+Obsoletes: %{oldlib_name}-plugin-botan < %{EVRD}
 
 %description -n %{lib_name}-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
@@ -274,8 +283,6 @@ use the Botan cryptography library as its backend.
 %files -n %{lib_name}-plugin-botan
 %attr(0755,root,root) %{_libdir}/qca-qt5/crypto/libqca-botan.*
 %endif
-
-#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 
@@ -437,9 +444,9 @@ utilize the Qt Cryptographic Architecture (QCA).
 
 %if %{with botan}
 %package -n %{qt6lib_name}-plugin-botan
-Summary:        Botan plugin for QCA
-Group:          Development/KDE and Qt
-BuildRequires:  pkgconfig(botan-2)
+Summary: Botan plugin for QCA
+Group: Development/KDE and Qt
+BuildRequires: pkgconfig(botan-2)
 
 %description -n %{qt6lib_name}-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
