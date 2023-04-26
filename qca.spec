@@ -137,7 +137,7 @@ Development files for QCA.
 %{_libdir}/pkgconfig/qca2-qt5.pc
 %{_libdir}/qt5/mkspecs/features/crypto.prf
 %{_libdir}/cmake/Qca-qt5
-%{_includedir}/Qca-qt5
+%{_qt5_includedir}/Qca-qt5
 %{_libdir}/libqca-qt5.so
 
 #------------------------------------------------------------------------------
@@ -319,7 +319,7 @@ Development files for QCA for Qt 6.
 %files -n %{qt6develname}
 %doc README COPYING INSTALL TODO
 %{_libdir}/cmake/Qca-qt6
-%{_includedir}/Qca-qt6
+%{_includedir}/qt6/Qca-qt6
 %{_libdir}/libqca-qt6.so
 
 #------------------------------------------------------------------------------
@@ -478,7 +478,6 @@ echo > examples/CMakeLists.txt
 %if ! %{with openssl}
 	-DWITH_ossl_PLUGIN:BOOL=OFF \
 %endif
-	-DQCA_SUFFIX=qt5 \
 	-G Ninja
 cd ..
 
@@ -495,7 +494,6 @@ export CMAKE_BUILD_DIR=build-qt6
 %if ! %{with openssl}
 	-DWITH_ossl_PLUGIN:BOOL=OFF \
 %endif
-	-DQCA_SUFFIX=qt6 \
 	-G Ninja
 
 %build
