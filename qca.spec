@@ -15,13 +15,13 @@
 %bcond_without openssl
 
 Name: qca
-Version: 2.3.5
+Version: 2.3.6
 %if 0%git
 Release: 0.%{git}.1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 6
+Release: 1
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 License: LGPLv2+
@@ -303,7 +303,7 @@ Libraries for QCA.
 %files -n %{qt6lib_name}
 %dir %{_libdir}/qt6/plugins/crypto
 %defattr(0755,root,root,0755)
-%{_libdir}/libqca-qt6.so.*
+%{_libdir}/qt6/lib/libqca-qt6.so.*
 
 #------------------------------------------------------------------------------
 
@@ -318,9 +318,9 @@ Development files for QCA for Qt 6.
 
 %files -n %{qt6develname}
 %doc README COPYING INSTALL TODO
-%{_libdir}/cmake/Qca-qt6
-%{_includedir}/qt6/Qca-qt6
-%{_libdir}/libqca-qt6.so
+%{_libdir}/qt6/lib/cmake/Qca-qt6
+%{_libdir}/qt6/include/Qca-qt6
+%{_libdir}/qt6/lib/libqca-qt6.so
 
 #------------------------------------------------------------------------------
 
@@ -335,7 +335,7 @@ This is a plugin to provide GnuPG capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-gnupg
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-gnupg.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-gnupg.*
 
 #------------------------------------------------------------------------------
 
@@ -351,7 +351,7 @@ This is a plugin to provide OpenSSL capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-openssl
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-ossl.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-ossl.*
 %endif
 
 #------------------------------------------------------------------------------
@@ -368,7 +368,7 @@ This is a plugin to provide PKCS11 capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-pkcs11
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-pkcs11.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-pkcs11.*
 #------------------------------------------------------------------------------
 
 %package -n %{qt6lib_name}-plugin-cyrus-sasl
@@ -382,7 +382,7 @@ This is a plugin to provide cyrus-sasl capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-cyrus-sasl
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-cyrus-sasl.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-cyrus-sasl.*
 
 #------------------------------------------------------------------------------
 
@@ -396,7 +396,7 @@ This is a plugin to provide logger capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-logger
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-logger.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-logger.*
 
 #------------------------------------------------------------------------------
 
@@ -410,7 +410,7 @@ This is a plugin to provide gcrypt capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-gcrypt
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-gcrypt.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-gcrypt.*
 
 #------------------------------------------------------------------------------
 
@@ -424,7 +424,7 @@ This is a plugin to provide nss capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-nss
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-nss.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-nss.*
 
 #------------------------------------------------------------------------------
 
@@ -438,7 +438,7 @@ This is a plugin to provide softstore capability to programs that
 utilize the Qt Cryptographic Architecture (QCA).
 
 %files -n %{qt6lib_name}-plugin-softstore
-%attr(0755,root,root) %{_libdir}/qt6/plugins/libqca-softstore.*
+%attr(0755,root,root) %{_libdir}/qt6/plugins/crypto/libqca-softstore.*
 
 #------------------------------------------------------------------------------
 
@@ -485,6 +485,7 @@ export CMAKE_BUILD_DIR=build-qt6
 %cmake \
 	-DBUILD_WITH_QT6:BOOL=ON \
 	-DQCA_INSTALL_IN_QT_PREFIX=ON \
+	-DLIB_INSTALL_DIR=%{_libdir} \
 	-DQCA_BINARY_INSTALL_DIR:PATH="%{_bindir}" \
 	-DPKGCONFIG_INSTALL_PREFIX=%{_libdir}/pkgconfig \
 	-DQCA_MAN_INSTALL_DIR=%{_mandir} \
