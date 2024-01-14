@@ -15,9 +15,9 @@
 %bcond_without openssl
 
 Name: qca
-Version: 2.3.7
+Version: 2.3.8
 %if 0%git
-Release: 0.%{git}.1
+Release: 0.%{git}1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
