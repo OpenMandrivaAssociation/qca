@@ -21,7 +21,7 @@ Release: 0.%{git}1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 2
+Release: 3
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 License: LGPLv2+
@@ -294,7 +294,7 @@ Requires: %{name}-qt6 = %{EVRD}
 Requires: rootcerts
 Obsoletes: %{name}-root-certificates < %{EVRD}
 %if %{with openssl}
-Recommends: %{lib_name}-plugin-openssl
+Recommends: %{qt6lib_name}-plugin-openssl
 %endif
 
 %description -n %{qt6lib_name}
