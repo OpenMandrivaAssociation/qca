@@ -21,7 +21,7 @@ Release: 0.%{git}1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 1
+Release: 2
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 License: LGPLv2+
@@ -290,7 +290,7 @@ use the Botan cryptography library as its backend.
 %package -n %{qt6lib_name}
 Summary: Libraries for QCA for Qt 6
 Group: System/Libraries
-Requires: %{name} = %{EVRD}
+Requires: %{name}-qt6 = %{EVRD}
 Requires: rootcerts
 Obsoletes: %{name}-root-certificates < %{EVRD}
 %if %{with openssl}
