@@ -15,13 +15,13 @@
 %bcond_without openssl
 
 Name: qca
-Version: 2.3.8
+Version: 2.3.9
 %if 0%git
 Release: 0.%{git}1
 # From git export git://anongit.kde.org/qca.git
 Source0: qca-%{version}-%git.tar.xz
 %else
-Release: 3
+Release: 1
 Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.tar.xz
 %endif
 License: LGPLv2+
