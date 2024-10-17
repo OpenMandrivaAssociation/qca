@@ -27,7 +27,7 @@ Source0: http://download.kde.org/stable/%{name}/%{version}/%{name}-%{version}.ta
 License: LGPLv2+
 Summary: Straightforward and cross-platform crypto API for Qt
 Group: System/Libraries
-URL: http://userbase.kde.org/QCA
+URL: https://userbase.kde.org/QCA
 Source100: %{name}.rpmlintrc
 BuildRequires: pkgconfig(Qt5Core)
 BuildRequires: pkgconfig(Qt5Gui)
