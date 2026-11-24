@@ -47,6 +47,7 @@ BuildRequires: qt6-cmake
 BuildRequires: doxygen
 BuildRequires: rootcerts
 BuildRequires: cmake
+BuildRequires: ninja
 BuildRequires: pkgconfig(libgcrypt)
 BuildRequires: pkgconfig(gpg-error)
 BuildRequires: sasl-devel
