@@ -274,7 +274,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{lib_name}-plugin-botan
 Summary: Botan plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: pkgconfig(botan-2)
+BuildRequires: pkgconfig(botan-3)
 Obsoletes: %{oldlib_name}-plugin-botan < %{EVRD}
 
 %description -n %{lib_name}-plugin-botan
@@ -446,7 +446,7 @@ utilize the Qt Cryptographic Architecture (QCA).
 %package -n %{qt6lib_name}-plugin-botan
 Summary: Botan plugin for QCA
 Group: Development/KDE and Qt
-BuildRequires: pkgconfig(botan-2)
+BuildRequires: pkgconfig(botan-3)
 
 %description -n %{qt6lib_name}-plugin-botan
 This is a plugin to allow the Qt Cryptographic Architecture (QCA) to
